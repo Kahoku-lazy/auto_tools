@@ -174,3 +174,7 @@ cython_debug/
 
 
 # 忽略的目录
+config.py
+app_auto_tools/case/
+app_auto_tools/page/
+app_auto_tools/config/

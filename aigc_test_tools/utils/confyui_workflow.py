@@ -55,7 +55,7 @@ class CfUIWorkflow:
         return output_images
     
     def _read_workflow_json_values(self, workflow_json):
-        with open(workflow_json) as f:
+        with open(workflow_json, encoding="utf8") as f:
             return json.load(f)
 
     def run(self, workflow_json, prompts_txt):
@@ -65,4 +65,3 @@ class CfUIWorkflow:
         random_number = random.randint(1000, 9999)
         prompt["25"]["inputs"]["noise_seed"] = random_number
         self._get_images(self.ws, prompt)
-

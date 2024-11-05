@@ -14,8 +14,6 @@ from sklearn.metrics import confusion_matrix,precision_score, recall_score, f1_s
 import seaborn as sns
 
 
-import sys
-sys.path.append("/ihoment/goveetest/liuwenle/code/app_autotest")
 from app.config import DatasetsInfo, Config
 from app.base.box import YOLOTools
 from app.dataset import select_datasets, select_model

@@ -337,10 +337,9 @@ def get_file_all(file_path, suffix):
 
 def test_data_info(timer="20240924"):
 
-    pictures_path = "/ihoment/goveetest/liuwenle/pictures/test_datasets"
-    models_path = "/ihoment/goveetest/liuwenle/models"
-    iou_path = "/ihoment/goveetest/liuwenle/iou"
-
+    pictures_path = None
+    models_path = None
+    iou_path = None
     test_data = []
 
     models = get_file_all(models_path, [".pt"])
@@ -354,15 +353,14 @@ def test_data_info(timer="20240924"):
         # print(model_ver, game_name, model, image_path, iou)
     
     df = pd.DataFrame(test_data, columns=["model_ver", "game_name", "model", "image_path", "iou"])
-    df.to_csv(f"/ihoment/goveetest/liuwenle/data/test_data_info_{timer}.csv", index=False)
 
 def test_pictures_info(file_path=None, timer="20240924"):
 
     if file_path is None:
-        file_path = "/ihoment/goveetest/liuwenle/pictures/test_pictures"
+        file_path = None
     images = get_file_all(file_path, [".jpg"])
 
-    save_path = "/ihoment/goveetest/liuwenle/pictures/test_datasets"
+    save_path = None
 
     images_info = []
     for i, im in enumerate(images):
@@ -382,38 +380,3 @@ def test_pictures_info(file_path=None, timer="20240924"):
             os.makedirs(output_path)
         shutil.copy(im, output_path)
     df = pd.DataFrame(images_info, columns=["GameName", "DataType", "LabelName", "ImageName", "ImagePath"])
-    df.to_csv(f"/ihoment/goveetest/liuwenle/data/test_pictures_info_{timer}.csv", index=False)
-
-if __name__ == "__main__":
-
-    # test_data_info("20240929")
-
-    datasets_csv_path = "/ihoment/goveetest/liuwenle/data/test_data_info_20240929.csv"
-    test_data_df = pd.read_csv(datasets_csv_path)
-    groupby_df = test_data_df.groupby("model_ver")
-
-    
-    for model_ver, values in groupby_df:
-
-        # if model_ver != "V02-20240920": continue
-
-        game_list = ["World_of_Warcraft_The_War_Within"]
-        
-        # ["StreetFighter6", "Wreckfest", "XDefiant", "Call_of_Duty_Modern_Warfare_III", "mario_Kart8", "mortal_kombat",
-        #              "MultiVersus", "rainbow6", "RocketLeague", "spiderman2"]
-
-
-        for _, rows in values.iterrows():
-
-            if rows["game_name"] not in game_list:
-                continue
-
-            # if not os.path.exists(rows["image_path"]):
-            #     continue
-            
-            rows["image_path"] = "/ihoment/goveetest/liuwenle/device_test_pic/World_of_Warcraft_The_War_Within"
-            config = { "weights": rows["model"], "source": rows["image_path"], "roi_file": rows["iou"], "conf_thres": 0.8,
-                        "classify": False, "device": "2,3",
-                        # "name": rows["game_name"],  "project": f"runs/{model_ver}"
-                    }
-            run(**config)
