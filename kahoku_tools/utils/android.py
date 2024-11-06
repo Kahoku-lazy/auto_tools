@@ -2,16 +2,17 @@
 @ author: Kahoku
 @ date: 2024/08
 @ description: uiatutomator2 模拟器操作
-    URL: https://uiauto.dev/
-    1. pip3 install -U uiautodev -i https://pypi.doubanio.com/simple
-    2. uiauto.dev  or python3 -m uiautodev
-@ version: 1.0
-pip install weditor==0.6.1
+    抓取定位元素工具下载地址: URL: https://uiauto.dev/
+    1. 安装: pip3 install -U uiautodev -i https://pypi.doubanio.com/simple
+    2. 运行: uiauto.dev  or python3 -m uiautodev
+@ version: 1.1
+    1. WEditor 工具替换为 uiauto
+    2. 新增获取APP日志功能
 """
 import os
 import uiautomator2 as u2
 
-def get_app_logs(device_serial, package_name='com.govee.home', output_file="govee_home_app.log"):
+def get_android_app_logs(device_serial, package_name='com.govee.home', output_file="govee_home_app.log"):
     logcat_command = f"adb -s {device_serial} logcat -v threadtime | findstr {package_name} > {output_file}"
     os.system(logcat_command)
 

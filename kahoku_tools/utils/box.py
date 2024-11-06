@@ -85,44 +85,6 @@ class MyDatabase:
         self.conn.commit()
         print(f"Column '{column_name}' added successfully.")
 
-class LogDriver:
-
-    def __init__(self, file_path, logger_name="root"):
-        """ 构造方法 
-        log_name: 日志保存路径。
-        """
-        self.logger = logging.Logger(logger_name)
-        self.logger.setLevel(logging.INFO)
-        self.fmts = "%(asctime)s-:%(levelname)s: -- %(message)s"   # log输出格式
-        self.dmt = "%Y/%m/%d %H:%M:%S"      # log时间格式
-
-        # 修改log生成的文件名，避免日志文件名重复
-        self.log_path = file_path
-
-    def logger_init(self):
-        """ 配置 logger """
-        self.handler = logging.FileHandler(self.log_path, 'a+')
-        self.rf_handler = logging.StreamHandler(sys.stderr)      #默认是sys.stderr
-        formatter = logging.Formatter(self.fmts, self.dmt)
-        self.handler.setFormatter(formatter)
-        self.rf_handler.setFormatter(formatter)
-        self.logger.addHandler(self.handler)
-        self.logger.addHandler(self.rf_handler)
-
-    def info(self, message):
-        """ 记录 log 信息 """
-        self.logger_init()
-        self.logger.info(message)
-        self.logger.removeHandler(self.handler)
-        self.logger.removeHandler(self.rf_handler)
-        
-    def error(self, message):
-        """ 记录 error 信息 """
-        self.logger_init()
-        self.logger.error(message)
-        self.logger.removeHandler(self.handler)
-        self.logger.removeHandler(self.rf_handler)
-
 def regex_findall_return(pattern):
     """装饰器: 使用正则匹配返回参数"""
     def decorator(func):
@@ -214,21 +176,6 @@ def wirte_csv_values(file_path, values, mode="a+"):
         csv_writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         csv_writer.writerow(values)
 
-def get_path_list(path):
-    path_parts = []
-    while True:
-        head, tail = os.path.split(path)
-        if tail:
-            path_parts.append(tail)
-        else:
-            if head:
-                path_parts.append(head)
-            break
-        path = head
-    # 反转列表，使路径部分按正确顺序排列
-    path_parts.reverse()
-    return path_parts
-    
 def get_file_all(file_path, suffix):
     files = []
     for ext in suffix:
@@ -576,4 +523,58 @@ class CnocrTools():
     
         cv2.imwrite(os.path.join(output_path, os.path.basename(image_path)), image)
         
+
+def find_value(text, pattern = r'Detect class:\s*(\d+)'):
+    """
+    从给定文本中提取 "Detect class: <数字>" 中的数字。
+
+    :param text: 包含 "Detect class: <数字>" 的字符串
+    :return: 提取的数字，如果没有找到，则返回 None
+    """
+    # 定义正则表达式模式
+    # pattern = r'Detect class:\s*(\d+)'
+
+    match = re.search(pattern, text)
     
+    if match:
+        return match.group(1)
+    else:
+        return None
+
+def find_all_values(text, pattern = r'Detect class:\s*(\d+)'):
+    """
+    查找字符串中所有包含 'Detect class: 0' 的部分，并提取其中的 '0'。
+
+    :param text: 输入的字符串
+    :return: 包含所有 '0' 的列表
+    """
+    # >> send >> d0 00 26 46 46 4f ff ff f5 40 00 70
+    # pattern = r'Detect class:\s*(0)'  # 匹配 'Detect class: 0' 并捕获 0
+    matches = re.findall(pattern, text)
+    return matches
+    
+
+import glob
+import os
+
+def get_images_from_directory(directory, extensions=["jpg", "jpeg", "png", "gif"]):
+    """
+    获取指定目录中的所有图片文件。
+
+    :param directory: 要查找图片的目录路径
+    :param extensions: 图片文件的扩展名列表（默认包括 jpg、jpeg、png、gif）
+    :return: 图片文件路径列表
+    """
+    image_files = []
+    for ext in extensions:
+        # 拼接匹配模式
+        # pattern = os.path.join(directory, "**", f"*.{ext}")
+        pattern = os.path.join(directory, f"*.{ext}")
+        # 查找所有匹配的文件
+        image_files.extend(glob.glob(pattern))
+    
+    return image_files
+
+import configparser
+
+def read_config(file_path):

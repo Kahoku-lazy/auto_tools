@@ -10,21 +10,11 @@ import logging
 class LogDriver:
 
     def __init__(self, file_path, logger_name="root"):
-        """
-        初始化日志记录器
-        log输出格式如下: 
-            |- 格式： "%(asctime)s -- %(levelname)s: %(message)s" 
-            |- 实例:  2024/08/21 18:30:43 -- INFO: hello world!
-                |-    2024/08/21 18:30:43 -- ERROR: hello world!
-        Args:
-            file_path (str): 日志文件保存路径
-            logger_name (str, optional): 日志记录器名称，默认为"root"。
-
-        """
         
         self.logger = logging.Logger(logger_name)
         self.logger.setLevel(logging.INFO)
-        self.fmts = "%(asctime)s -- %(levelname)s: %(message)s"   # log输出格式
+
+        self.fmts = "%(asctime)s--%(levelname)s: %(message)s"   # log输出格式
         self.dmt = "%Y/%m/%d %H:%M:%S"      # log时间格式
 
         self.log_path = file_path
