@@ -578,3 +578,47 @@ def get_images_from_directory(directory, extensions=["jpg", "jpeg", "png", "gif"
 import configparser
 
 def read_config(file_path):
+    pass
+
+from datetime import datetime
+
+class Utils:
+    
+    def read_config(self, file_path):
+        # 创建 ConfigParser 对象
+        config = configparser.ConfigParser()
+        # 读取配置文件
+        config.read(file_path)
+        return config
+
+    def is_value_exist(self, text, pattern):
+        match = re.findall(pattern, text)
+        if match:
+            return True
+        return None
+
+    def find_value(self, text, pattern):
+        match = re.search(pattern, text)
+        if match:
+            return match
+        else:
+            return None
+
+    def write_csv_values(self, file_path, values):
+        with open(file_path, mode='a+', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerow(values)
+
+    def get_current_time(self):
+        current_time = datetime.now()
+        return current_time 
+    
+    def time_difference_in_minutes(self, start_time, end_time):
+
+        time_difference = end_time - start_time
+        
+        time_difference_seconds = time_difference.total_seconds()
+        time_difference_minutes = time_difference_seconds / 60
+        
+        return time_difference_minutes
+    

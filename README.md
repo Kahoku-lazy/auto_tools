@@ -11,5 +11,11 @@
 1. 摄像头，设备 ，接口文档
 
 
+## kahoku_tools: Android App +  serial 串口 工具
+#### 简介
+1. 通过Uiautomator2 控制Android串口
+2. 使用Python 接收与发送串口指令
+3. 使用pandas，re 筛选串口日志
+
 ## 收藏
 1. wd14-tagger-standalone
