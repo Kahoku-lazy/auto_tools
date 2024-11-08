@@ -10,23 +10,25 @@
 """
 
 from multiprocessing import Process, Queue
-from datetime import datetime
 import time
+
+import sys
+sys.path.append("kahoku_tools")
 
 from utils.serial import SerialWindows
 from utils.logs import LogDriver
-from public.utils import Utils
+from utils.box import Utils
 
 
 # ------------------------------ 记录设备日志 ------------------------------
-def receive_serial_data(queue, prot, baud_rate, save_log_path):
+def receive_serial_data(queue, prot, baud_rate, save_log):
     """ 串口接收模块: 循环读取串口数据并放入队列中 """
     ser = SerialWindows(prot, baud_rate)
     ser.open_serial()
 
-    ser_log = LogDriver(save_log_path)
+    ser_log = LogDriver(save_log)
     while True:
-        data = ser.read_line()
+        data = ser.read_line_data()
         queue.put(data)
         ser_log.info(data)
 
@@ -39,7 +41,7 @@ def send_relay_serial_common(common: list, prot, baud_rate):
     while True:
         for i in common:
             time.sleep(0.5)
-            relay_ser.wirte_serial_data(bytes.fromhex(i))
+            relay_ser.write_serial_data(bytes.fromhex(i))
         
         time.sleep(10)
 
@@ -55,10 +57,9 @@ def ota_log_filter(queue, find_regex, is_regex_exist, csv_title, save_csv_path):
     while True:
         if queue.empty():  
             continue
+
         data = queue.get()
-        
         if utils.is_value_exist(data, is_regex_exist):
-            print(f">>> [OTA Success] {results}")
             status = "success"
         else:
             status = None
@@ -100,7 +101,6 @@ def sensor_log_filter(queue, is_regex_exist, csv_title, save_csv_path):
         if not queue.empty():
             data = queue.get()
 
-            
             if utils.is_value_exist(data, is_regex_exist):
                 values[0] = utils.get_current_time()
                 values[1] = "success"
@@ -111,44 +111,49 @@ def sensor_log_filter(queue, is_regex_exist, csv_title, save_csv_path):
 if __name__ == '__main__':
 
     data_queue = Queue()
+
+    # ------------------------------ 参数 ------------------------------
+    config = Utils().read_yaml_dict(r"D:\Kahoku\auto_tools\kahoku_tools\config\test_device_ota_function.yaml")
     
     # ------------------------------多进程业务逻辑 串口数据接收与处理 ------------------------------
     # 串口接收进程
-    prot, baud_rate = "COM12", 115200
-    save_log = r"D:\Kahoku\H7148_OTA\results\h7148_serial.log"
-    receiver = Process(target=receive_serial_data, args=(data_queue, prot, baud_rate,save_log,))
+    receiver = Process(target=receive_serial_data,
+                        args=(data_queue, 
+                                config["device_info"]["prot"],  # 串口号
+                                config["device_info"]["baud_rate"],  # 波特率
+                                config["device_info"]["save_log"],     # 日志保存路径
+                                )
+                                )
 
     # 继电器发送进程
-    common = ['A0 01 01 A2', 'A0 01 00 A1']
-    prot, baud_rate = "COM11", 9600
-    relay = Process(target=send_relay_serial_common, args=(common, prot, baud_rate,))
+    relay = Process(target=send_relay_serial_common, 
+                    args=(config["relay_info"]["common"],       # 继电器指令列表
+                            config["relay_info"]["prot"],   # 继电器串口号
+                            config["relay_info"]["baud_rate"], # 继电器波特率
+                            ))
 
 
     # OTA数据处理进程
-    find_regex = r'MQTT OTA Process : (\d+) / (\d+)'
-    is_regex_exist = r'checkDone\s*success'
-    csv_title = ["ota_percent", "ota_maxsize", "timer",  "OTA_start_time",  "OTA_end_time", "OTA_times", "ota_status"]
-    save_csv_path = r"D:\Kahoku\H7148_OTA\results\h7148_ota_result.csv"
-    ota_log= Process(target=ota_log_filter, args=(data_queue,find_regex, is_regex_exist, csv_title, save_csv_path,))
+    # ind_regex, is_regex_exist, csv_title, save_csv_path
+    ota_log= Process(target=ota_log_filter, 
+                    args=(data_queue, 
+                            config["ota_log_info"]["find_regex"],       # OTA 进度
+                            config["ota_log_info"]["is_regex_exist"],   # OTA 成功标志
+                            config["ota_log_info"]["csv_title"],         # OTA 表格标题
+                            config["ota_log_info"]["save_csv_path"],       # OTA 表格保存路径
+                            )
+                        )
 
-
-    is_regex_exist = r'insert trigger sensor data is OK'
-    csv_title = ["receive_time", "receive_status"]
-    save_csv_path = r"D:\Kahoku\H7148_OTA\results\h7148_sensor_result.csv"
-    sensor_log = Process(target=sensor_log_filter, args=(data_queue,is_regex_exist, csv_title, save_csv_path,))
 
 
     # ------------------------------ 多进程运行 ------------------------------
     receiver.start()
     relay.start()
-
     ota_log.start()
-    sensor_log.start()
 
 
 
     receiver.join()
     relay.join()
-
     ota_log.join()
-    sensor_log.join()
+

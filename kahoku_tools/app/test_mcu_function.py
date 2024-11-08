@@ -8,6 +8,7 @@ import sys
 sys.path.append(r'D:\Kahoku\auto_tools\kahoku_tools')
 from utils.serial import SerialWindows
 from utils.logs import LogDriver
+from utils.box import Utils
 
 import random
 import time
@@ -87,14 +88,14 @@ def serial_command_sender(run_log, ser, command, keyword=None, interval=2):
     return responses
 
 
-def run(port, baudrate: int, values, interval=1, command_mode='random', random_count=100, command_length=5):
+def run(port, baudrate: int, values, interval=1, command_mode='random', random_count=100, command_length=5, log_path="run_log.log"):
     """ 发送指令功能
         values: (commands, keywords);     commands: 指令列表  keyword: 检查指令是否生效的关键字
         mode: 'sequential': 递增, 'random': 随机, 'assign': 指定
         interval: 指令间隔时间，单位秒
     """
     # 日志记录器
-    run_log = LogDriver("run_log.log")
+    run_log = LogDriver(log_path)
 
     # 打开串口
     serial_port = SerialWindows(port, baudrate)
@@ -135,25 +136,6 @@ def run(port, baudrate: int, values, interval=1, command_mode='random', random_c
 # 示例用法
 if __name__ == "__main__":
 
-    # 输入、输出
-    # values: (commands, keywords);   commands: 指令列表  keyword: 检查指令是否生效的关键字
-    values = [
-        ('55 00 0B 00 00 60', 'AA 0B 00 00 01 01 B7'),
-        ('55 00 0B 00 00 60', 'AA 0B 00 00 01 01 B8'),
-        ('55 00 0B 00 00 60', 'AA 0B 00 00 01 01 B7'),
-        ('55 00 0B 00 00 60', 'AA 0B 00 00 01 01 B7'),
-    ]
-
-    # 输入参数
-    prot = 'COM13'      # 串口名
-    baudrate = 19200    # 串口波特率
-
-    random_count = 10   # 随机的次数
-    command_length = 6  # 指令的长度
-    interval = 1       # 指令间隔时间
-
-    # mode: 'sequential': 递增, 'random': 随机, 'assign': 指定
-    command_mode='sequential'   
-
+    args = Utils().read_yaml_dict(r"D:\Kahoku\auto_tools\kahoku_tools\config\test_mcu_function.yaml")
     # 运行程序
-    run(prot, baudrate, values, interval=interval, command_mode=command_mode, random_count=random_count, command_length=command_length)
+    run(**args)

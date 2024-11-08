@@ -13,7 +13,7 @@ import pandas as pd
 import PIL
 from cnocr import CnOcr
 from difflib import SequenceMatcher
-from ultralytics import YOLO
+# from ultralytics import YOLO
 from pathlib import Path
 
 class MyDatabase:
@@ -182,7 +182,7 @@ def get_file_all(file_path, suffix):
         files.extend(glob.glob(os.path.join(file_path, f'**/**{ext}'),  recursive=True))
     return files
 
-
+'''
 class YOLOTools:
     """ 目标检测模型 """
 
@@ -574,11 +574,9 @@ def get_images_from_directory(directory, extensions=["jpg", "jpeg", "png", "gif"
         image_files.extend(glob.glob(pattern))
     
     return image_files
+'''
+import configparser 
 
-import configparser
-
-def read_config(file_path):
-    pass
 
 from datetime import datetime
 
@@ -621,4 +619,16 @@ class Utils:
         time_difference_minutes = time_difference_seconds / 60
         
         return time_difference_minutes
+    
+    @staticmethod
+    def read_yaml_dict(yaml_path):
+
+        yaml_file = Path(yaml_path)  
+        if yaml_file.exists():  
+            with yaml_file.open('r', encoding='utf8') as file:  
+                data = yaml.safe_load(file)  
+        else:  
+            return False
+        
+        return data
     
