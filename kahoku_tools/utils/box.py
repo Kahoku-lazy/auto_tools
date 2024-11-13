@@ -123,7 +123,7 @@ def read_yaml_dict(yaml_path):
 
 def read_txt_as_list( file_path):
     path = Path(file_path)
-    contents = path.read_text()
+    contents = path.read_text(encoding='utf-8')
 
     return contents.splitlines()
 

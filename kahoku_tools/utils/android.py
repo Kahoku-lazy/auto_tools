@@ -1,15 +1,22 @@
 """ 
 @ author: Kahoku
 @ date: 2024/08
-@ description: uiatutomator2 模拟器操作
-    抓取定位元素工具下载地址: URL: https://uiauto.dev/
-    1. 安装: pip3 install -U uiautodev -i https://pypi.doubanio.com/simple
-    2. 运行: uiauto.dev  or python3 -m uiautodev
+@ description: 
+    -- uiatutomator2 模拟器操作
+        抓取定位元素工具下载地址: URL: https://uiauto.dev/
+        1. 安装: pip3 install -U uiautodev -i https://pypi.doubanio.com/simple
+        2. 运行: uiauto.dev  or python3 -m uiautodev
+
+    -- airtest 图片点击方法: https://github.com/AirtestProject/Airtest
+        1. api 教程： https://airtest.readthedocs.io/en/latest/all_module/airtest.core.api.html
+    -- OmniParser AI模型 UI识别工具: https://github.com/microsoft/OmniParser
+        1. 模型库：https://huggingface.co/spaces/microsoft/OmniParser
 @ version: 1.1
     1. WEditor 工具替换为 uiauto
     2. 新增获取APP日志功能
 """
 import os
+import time
 import uiautomator2 as u2
 
 def get_android_app_logs(device_serial, package_name='com.govee.home', output_file="govee_home_app.log"):
@@ -118,5 +125,68 @@ class UiAutomationTools:
     def close_app(self, package_name):
         self.d.app_stop(package_name)
 
+    def wait_seconds(self, seconds):
+        time.sleep(seconds)
+
+    def input_text(self, element_xpath, text):
+        element_xpath = self.d.xpath(element_xpath)
+        if element_xpath:
+            element_xpath.set_text(text)
+
     
+if __name__ == "__main__":
+    u = UiAutomationTools()
+
+    # yandex 
+    u.start_app("com.yandex.iot")
+    u.wait_seconds(4)
+
+    from airtest.core.api import *
+
+    if ex
+    touch(Template(r"D:\Kahoku\auto_tools\pictures\on-off.png"))
+    # u.close_app("com.yandex.iot")
+
+    # xiaomi login code
+
+    # xiaomi_username = ""
+    # xiaomi_password = ""
+
+
+    # u.start_app("com.xiaomi.smarthome")
+    # u.wait_seconds(4)
+
+    # # 去登录
+    # login_button_element = '//*[@resource-id="com.xiaomi.smarthome:id/login"]'
+    # u.click_xpath(login_button_element)
+
+    # # 密码登录
+    # switch_password_element = '//*[@resource-id="com.xiaomi.smarthome:id/password_login"]'
+    # u.click_xpath(switch_password_element)
+
+
+    # # 输出账号 密码
+    # username_element = '//*[@text="邮箱/手机号码/小米ID"]'
+    # password_element = '//*[@text="密码"]'
     
+    # u.input_text(username_element, xiaomi_username)
+    # u.input_text(password_element, xiaomi_password)
+
+    # # 勾选协议
+    # status_element = '//*[@resource-id="com.xiaomi.smarthome:id/user_agreement_checkbox"]'
+    # u.click_xpath(status_element)
+
+    # login_button = '//*[@text="登录"]'
+    # u.click_xpath(login_button)
+
+    # if u.element_wait_exist('//*[@text="登录"]', timeout=2):
+    #     print("登陆失败")
+    # else:
+    #     print("登陆成功")
+
+
+    # time.sleep(3)
+    # u.close_app("com.xiaomi.smarthome")
+
+    
+

@@ -182,3 +182,6 @@ app_auto_tools/config/
 
 # 不忽略的文件
 !config.ini
+
+# 忽略的项目
+OmniParser
