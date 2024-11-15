@@ -15,9 +15,9 @@ import time
 import sys
 sys.path.append("kahoku_tools")
 
-from utils.serial import SerialWindows
-from utils.logs import LogDriver
-from utils.box import Utils
+from utils.serial_modules import SerialWindows
+from utils.log_modules import LogDriver
+from utils.method import Utils
 
 
 # ------------------------------ 记录设备日志 ------------------------------

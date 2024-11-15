@@ -9,15 +9,24 @@
 
     -- airtest 图片点击方法: https://github.com/AirtestProject/Airtest
         1. api 教程： https://airtest.readthedocs.io/en/latest/all_module/airtest.core.api.html
+
     -- OmniParser AI模型 UI识别工具: https://github.com/microsoft/OmniParser
         1. 模型库：https://huggingface.co/spaces/microsoft/OmniParser
 @ version: 1.1
     1. WEditor 工具替换为 uiauto
     2. 新增获取APP日志功能
+
+
+@ 功能：
+    1. PP-OCR: https://paddlepaddle.github.io/PaddleOCR/latest/ppocr/infer_deploy/python_infer.html#1
+    2. Airtest 图片点击方法
+
 """
 import os
 import time
 import uiautomator2 as u2
+
+from airtest.core.api import *
 
 def get_android_app_logs(device_serial, package_name='com.govee.home', output_file="govee_home_app.log"):
     logcat_command = f"adb -s {device_serial} logcat -v threadtime | findstr {package_name} > {output_file}"
@@ -133,60 +142,37 @@ class UiAutomationTools:
         if element_xpath:
             element_xpath.set_text(text)
 
+class AirtestTools:
+
+    import logging
+    logger = logging.getLogger("airtest")
+    logger.setLevel(logging.ERROR)
+
     
-if __name__ == "__main__":
-    u = UiAutomationTools()
+    def __init__(self):
+        init_device("Android")
+        pass
 
-    # yandex 
-    u.start_app("com.yandex.iot")
-    u.wait_seconds(4)
+    def start_app(self, package_name):
+        # init_device("Android")
+        start_app(package_name)
 
-    from airtest.core.api import *
+    def close_app(self, package_name):
+        stop_app(package_name)
 
-    if ex
-    touch(Template(r"D:\Kahoku\auto_tools\pictures\on-off.png"))
-    # u.close_app("com.yandex.iot")
+    def click_icon(self, icon_path):
+        if exists(Template(icon_path)):
+            touch(Template(icon_path))
 
-    # xiaomi login code
+    def wait_seconds(self, seconds):
+        sleep(seconds)
 
-    # xiaomi_username = ""
-    # xiaomi_password = ""
+    def is_icon_exist(self, icon_path):
+        return exists(Template(icon_path))
 
+    def keyevent_back(self):
+        keyevent("BACK")
 
-    # u.start_app("com.xiaomi.smarthome")
-    # u.wait_seconds(4)
-
-    # # 去登录
-    # login_button_element = '//*[@resource-id="com.xiaomi.smarthome:id/login"]'
-    # u.click_xpath(login_button_element)
-
-    # # 密码登录
-    # switch_password_element = '//*[@resource-id="com.xiaomi.smarthome:id/password_login"]'
-    # u.click_xpath(switch_password_element)
-
-
-    # # 输出账号 密码
-    # username_element = '//*[@text="邮箱/手机号码/小米ID"]'
-    # password_element = '//*[@text="密码"]'
     
-    # u.input_text(username_element, xiaomi_username)
-    # u.input_text(password_element, xiaomi_password)
-
-    # # 勾选协议
-    # status_element = '//*[@resource-id="com.xiaomi.smarthome:id/user_agreement_checkbox"]'
-    # u.click_xpath(status_element)
-
-    # login_button = '//*[@text="登录"]'
-    # u.click_xpath(login_button)
-
-    # if u.element_wait_exist('//*[@text="登录"]', timeout=2):
-    #     print("登陆失败")
-    # else:
-    #     print("登陆成功")
-
-
-    # time.sleep(3)
-    # u.close_app("com.xiaomi.smarthome")
-
     
 

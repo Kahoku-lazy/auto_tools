@@ -2,7 +2,7 @@ import os
 
 import sys
 sys.path.append(r"auto_tools\kahoku_tools")
-from utils.box import read_txt_as_list
+from utils.method import read_txt_as_list
 
 
 anime_name = read_txt_as_list(r"E:\KahokuCodeFiles\image_dirname.txt")

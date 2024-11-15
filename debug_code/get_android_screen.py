@@ -13,11 +13,11 @@ def capture_screenshot():
     subprocess.run(['adb', 'shell', 'screencap', '-p', '/sdcard/screenshot.png'])
 
     # 将截图文件从设备拉取到电脑
-    subprocess.run(['adb', 'pull', '/sdcard/screenshot.png', './pictures/screenshot.png'])
+    subprocess.run(['adb', 'pull', '/sdcard/screenshot.png', 'screenshot.png'])
 
     # 可选：删除设备上的截图文件
     subprocess.run(['adb', 'shell', 'rm', '/sdcard/screenshot.png'])
 
-    print("screenshot save to ^^^  ./pictures/screenshot.png")
+    print("screenshot save to ^^^  ./kahoku_tools/pictures/screenshot.png")
 
 capture_screenshot()

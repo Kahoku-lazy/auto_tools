@@ -1,186 +1,105 @@
-""" @author: Kahoku
-@date: 2024/08
-@description: 基础方法, 包括文件操作, 字符串处理, 图片处理, 模型使用等
-@version: 1.0
-"""
-import json, yaml, csv, sqlite3
-import re, sys, shutil, os, logging
-import glob, cv2, torch
-import xml.etree.ElementTree as ET
-import numpy as np
-import pandas as pd
+import cv2
+import json
+import glob
 
-import PIL
-from cnocr import CnOcr
-from difflib import SequenceMatcher
-# from ultralytics import YOLO
 from pathlib import Path
 
-class MyDatabase:
-    def __init__(self, db_name):
-        self.conn = sqlite3.connect(db_name)
-        self.cursor = self.conn.cursor()
-        # self.create_table()
+def get_images_from_directory(directory, extensions=["jpg", "jpeg", "png", "gif"]):
 
-    def create_table(self):
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS records (
-                                id INTEGER PRIMARY KEY,
-                                name TEXT UNIQUE,
-                                video_state TEXT,
-                                detect_state TEXT,
-                                file_type TEXT,
-                                game_name TEXT
-                            )''')
-        self.conn.commit()
-
-    def insert_record(self, name, suffix, game_name, video_state, detect_state):
-        try:
-            self.cursor.execute("INSERT INTO records (name, video_state, detect_state, file_type, game_name) VALUES (?, ?, ?, ?, ?)", (name,video_state, detect_state, suffix, game_name))
-            self.conn.commit()
-            return True
-            # print("Record inserted successfully.")
-        except sqlite3.IntegrityError:
-            return False
-            # print("Error: User with the same name already exists.")
-
-    def update_record_video_state(self, name, video_state):
-        self.cursor.execute("UPDATE records SET video_state = ? WHERE name = ?", (video_state, name))
-        self.conn.commit()
-        print("Record updated successfully.")
-
-    def update_record_detect_state(self, name, detect_state):
-        self.cursor.execute("UPDATE records SET detect_state = ? WHERE name = ?", (detect_state, name))
-        self.conn.commit()
-        print("Record updated successfully.")
-
-    def delete_record(self, name):
-        self.cursor.execute("DELETE FROM records WHERE name = ?", (name,))
-        self.conn.commit()
-        print("Record deleted successfully.")
-
-    def fetch_all_records(self):
-        self.cursor.execute("SELECT * FROM records")
-        rows = self.cursor.fetchall()
-        for row in rows:
-            print(row)
-
-    def get_user_video_state(self, name):
-        self.cursor.execute('SELECT video_state FROM records WHERE name = ?', (name,))
-        result = self.cursor.fetchone()
-        if result:
-            return result[0]
-        
-    def get_user_detect_state(self, name):
-        self.cursor.execute('SELECT detect_state FROM records WHERE name = ?', (name,))
-        result = self.cursor.fetchone()
-        if result:
-            return result[0]
-
-    def close_connection(self):
-        self.conn.close()
-        print("Database connection closed.")
-
-    def add_column_text(self, column_name):
-        self.cursor.execute(f'ALTER TABLE records ADD COLUMN {column_name} TEXT')
-        self.conn.commit()
-        print(f"Column '{column_name}' added successfully.")
-
-def regex_findall_return(pattern):
-    """装饰器: 使用正则匹配返回参数"""
-    def decorator(func):
-        def wrapper(*args, **kwargs):
-            result = func(*args, **kwargs)
-            if result:
-                matchs = re.findall(pattern, result)
-                if matchs:
-                    return matchs
-            return None
-        return wrapper
-    return decorator
-
-def regex_findall(pattern):
-    """装饰器: 使用正则匹配输入参数"""
-    def decorator(func):
-        def wrapper(*args, **kwargs):
-            # 应用正则表达式于输入参数
-            matches = [re.findall(pattern, arg) for arg in args]
-            matches = [item for sublist in matches for item in sublist]
-            # 将匹配结果传递给被装饰的函数
-            return func(matches, **kwargs)
-        return wrapper
-    return decorator
-
-def read_yaml_dict(yaml_path):
-
-    yaml_file = Path(yaml_path)  
-    if yaml_file.exists():  
-        with yaml_file.open('r') as file:  
-            data = yaml.safe_load(file)  
-    else:  
-        return False
+    image_files = []
+    for ext in extensions:
+        pattern = os.path.join(directory, f"*.{ext}")
+        image_files.extend(glob.glob(pattern))
     
-    return data
+    return image_files
 
-def read_txt_as_list( file_path):
-    path = Path(file_path)
-    contents = path.read_text(encoding='utf-8')
-
-    return contents.splitlines()
-
-def read_yaml_as_dict( file_path):
-    with open(file_path, mode='r', encoding="utf8") as f:
-        yaml_values = yaml.load(f, Loader=yaml.FullLoader)
-
-    return yaml_values
-
-def read_csv_as_dict( file_path):
-    data = pd.read_csv(file_path)
-
-    return data.to_dict('records')
-
-def read_csv_as_df( file_path):
-    df = pd.read_csv(file_path)
-
-    return df
-
-def read_json_as_dict( configs_file):
-    with open(configs_file, 'r') as f:
+def read_iou_json(json_path):
+    with open(json_path, 'r') as f:
         configs = json.load(f)
     return configs
 
-def wirte_text(file_path, values: list):
-    """ Function: 将列表类型数据写入文本文档中，逐行写入。
-    args:
-        - file_path: 文本文档的路径
-        - values: 需要写入的数据； type: list。
-    """
-    path = Path(file_path)
+colors = {
+    "WHITE": (255, 255, 255),  
+    "BLACK": (0, 0, 0),  
+    "RED": (255, 0, 0),  
+    "GREEN": (0, 255, 0),  
+    "BLUE": (0, 0, 255),  
+    "YELLOW": (0, 255, 255),  # 注意：这实际上是青色，但传统上也被称作黄色  
+    "CYAN": (0, 255, 255),    # 真正的青色  
+    "MAGENTA": (255, 0, 255),  
+    "PINK": (255, 192, 203),  # 浅粉色  
+    "DEEP_PINK": (255, 20, 147),  
+    "ORANGE": (255, 165, 0),  
+    "GOLD": (255, 215, 0),    # 金色的一种近似  
+    "LIGHT_GREEN": (144, 238, 144),  
+    "DARK_CYAN": (0, 139, 139),  
+    "SKY_BLUE": (135, 206, 250),  # 天蓝色的一种近似  
+    "BROWN": (165, 42, 42),  
+    "GRAY": (128, 128, 128),  
+    "SILVER": (192, 192, 192),  
+    "PURPLE": (128, 0, 128),  
+    "TEAL": (0, 128, 128)  # 茶色（或称为海蓝色），这是另一种常用的颜色  
+} 
 
-    path.write_text("\n".join(values))
+def iou_to_image(image_pth, json_pth, outpath, rate=1):
+    im_index = int(Path(image_pth).stem.split("-")[0])
+    image = cv2.imread(image_pth)
+    height_img, width_img, _ = image.shape
+    print(f">>>> image path: {image_pth}")
+    print(f">>>> iou name: {json_pth}")
+    configs = read_iou_json(json_pth)
+    for content in configs["class"]:
+        if content['label'] == im_index:
+            for filt in content.get('filters', []):
+                if 'iou_xywh' in filt:
+                    iou_xywh = filt['iou_xywh']
+                    print(f">>>>[iou_xywh] image label id: {im_index}")
+                    print(f">>>>[iou_xywh] image iou iou_xywh: {iou_xywh}")
+                    x_center = float(iou_xywh[0])*width_img + 1
+                    y_center = float(iou_xywh[1])*height_img + 1
 
-def find_keys_by_value( my_dict, value_to_find):
-    """ Function: 通过字典的值去查找与配对应字典的键
-    args:
-        - my_dict:  字典
-        - value_to_find: 值
-    return:
-        - keys: 值对应的键； 无对应的键则返回为空
-    """
-    for key, value in my_dict.items():
-        if value == value_to_find:
-            return key
-    return None
+                    iou_xywh_width = 0.5*float(iou_xywh[2])*rate
+                    print(f">>>>[iou_xywh] image iou iou_xywh width Rate x {rate}: {iou_xywh_width*2} {iou_xywh_width*2-float(iou_xywh[2])}")
+                    iou_xywh_height = 0.5*float(iou_xywh[3])*rate
+                    print(f">>>>[iou_xywh] image iou iou_xywh height Rate x {rate}: {iou_xywh_height*2} {iou_xywh_height*2-float(iou_xywh[3])}")
 
-def wirte_csv_values(file_path, values, mode="a+"):
-    with open(file_path, mode, newline='') as csvfile:
-        csv_writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        csv_writer.writerow(values)
+                    xminVal = int(x_center - iou_xywh_width*width_img)   # int(iou_xywh 列表中的元素都是字符串类型
+                    yminVal = int(y_center - iou_xywh_height*height_img)
+                    xmaxVal = int(x_center + iou_xywh_width*width_img)
+                    ymaxVal = int(y_center + iou_xywh_height*height_img)
 
-def get_file_all(file_path, suffix):
-    files = []
-    for ext in suffix:
-        files.extend(glob.glob(os.path.join(file_path, f'**/**{ext}'),  recursive=True))
-    return files
+                    pt1 = (xmaxVal, ymaxVal)   
+                    pt2 = (xminVal, yminVal)
+                    # 定义矩形的颜色 (BGR) 和线条粗细  
+                    color = colors['RED']
+                    thickness = 4 
+                    image = cv2.rectangle(image, pt1, pt2, color, thickness) 
+
+                if 'region' in filt:
+                    region = filt['region']
+                    print(f">>>> image label id: {im_index}")
+                    print(f">>>> image iou region: {region}")
+                    x_center = float(region[0])*width_img + 1
+                    y_center = float(region[1])*height_img + 1
+
+                    region_width = 0.5*float(region[2])*rate
+                    print(f">>>> image iou region width Rate x {rate}: {region_width*2} {region_width*2-float(region[2])}")
+                    region_height = 0.5*float(region[3])*rate
+                    print(f">>>> image iou region height Rate x {rate}: {region_height*2} {region_height*2-float(region[3])}")
+
+                    xminVal = int(x_center - region_width*width_img)   # int(region 列表中的元素都是字符串类型
+                    yminVal = int(y_center - region_height*height_img)
+                    xmaxVal = int(x_center + region_width*width_img)
+                    ymaxVal = int(y_center + region_height*height_img)
+
+                    pt1 = (xmaxVal, ymaxVal)   
+                    pt2 = (xminVal, yminVal)
+                    # 定义矩形的颜色 (BGR) 和线条粗细  
+                    color = colors['BLUE']
+                    thickness = 4 
+                    image = cv2.rectangle(image, pt1, pt2, color, thickness) 
+    cv2.imwrite(outpath, image)
+
 
 '''
 class YOLOTools:
@@ -575,60 +494,3 @@ def get_images_from_directory(directory, extensions=["jpg", "jpeg", "png", "gif"
     
     return image_files
 '''
-import configparser 
-
-
-from datetime import datetime
-
-class Utils:
-    
-    def read_config(self, file_path):
-        # 创建 ConfigParser 对象
-        config = configparser.ConfigParser()
-        # 读取配置文件
-        config.read(file_path)
-        return config
-
-    def is_value_exist(self, text, pattern):
-        match = re.findall(pattern, text)
-        if match:
-            return True
-        return None
-
-    def find_value(self, text, pattern):
-        match = re.search(pattern, text)
-        if match:
-            return match
-        else:
-            return None
-
-    def write_csv_values(self, file_path, values):
-        with open(file_path, mode='a+', newline='', encoding='utf-8') as file:
-            writer = csv.writer(file)
-            writer.writerow(values)
-
-    def get_current_time(self):
-        current_time = datetime.now()
-        return current_time 
-    
-    def time_difference_in_minutes(self, start_time, end_time):
-
-        time_difference = end_time - start_time
-        
-        time_difference_seconds = time_difference.total_seconds()
-        time_difference_minutes = time_difference_seconds / 60
-        
-        return time_difference_minutes
-    
-    @staticmethod
-    def read_yaml_dict(yaml_path):
-
-        yaml_file = Path(yaml_path)  
-        if yaml_file.exists():  
-            with yaml_file.open('r', encoding='utf8') as file:  
-                data = yaml.safe_load(file)  
-        else:  
-            return False
-        
-        return data
-    

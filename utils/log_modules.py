@@ -39,7 +39,7 @@ class LogDriver:
         Args:
             message (str): 需要记录的日志信息。
         """
-        self.logger_init()
+        # self.logger_init()
         self.logger.info(message)
         self.logger.removeHandler(self.handler)
         self.logger.removeHandler(self.rf_handler)
@@ -50,7 +50,7 @@ class LogDriver:
         Args:
             message (str): 需要记录的 error 信息。
         """
-        self.logger_init()
+        # self.logger_init()
         self.logger.error(message)
         self.logger.removeHandler(self.handler)
         self.logger.removeHandler(self.rf_handler)
