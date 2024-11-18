@@ -7,22 +7,28 @@
 import json, yaml, csv, sqlite3
 import re, sys, shutil, os, logging
 import glob, cv2, torch
-import xml.etree.ElementTree as ET
+# import xml.etree.ElementTree as ET
 import numpy as np
 import pandas as pd
 import configparser 
 from datetime import datetime
-
+import pandas as pd
+import csv
+import cv2
+import os
+import fnmatch
 import os
 import time
 from playsound import playsound
 
-import PIL
-from cnocr import CnOcr
-from difflib import SequenceMatcher
-# from ultralytics import YOLO
+# import PIL
+# from cnocr import CnOcr
+# from difflib import SequenceMatcher
+# # from ultralytics import YOLO
 from pathlib import Path
 
+
+# ------------------------------------------------   装饰器：正则匹配  ------------------------------------------------
 def regex_findall_return(pattern):
     """装饰器: 使用正则匹配返回参数"""
     def decorator(func):
@@ -48,17 +54,8 @@ def regex_findall(pattern):
         return wrapper
     return decorator
 
-def read_yaml_dict(yaml_path):
 
-    yaml_file = Path(yaml_path)  
-    if yaml_file.exists():  
-        with yaml_file.open('r') as file:  
-            data = yaml.safe_load(file)  
-    else:  
-        return False
-    
-    return data
-
+# ------------------------------------------------   Function： 文件读取（data）  ------------------------------------------------
 def read_txt_as_list( file_path):
     path = Path(file_path)
     contents = path.read_text(encoding='utf-8')
@@ -86,7 +83,13 @@ def read_json_as_dict( configs_file):
         configs = json.load(f)
     return configs
 
-def wirte_text(file_path, values: list):
+def read_config(file_path):
+    config = configparser.ConfigParser()
+    config.read(file_path)
+    return config
+
+# ------------------------------------------------   Function： 文件写入（data）  ------------------------------------------------
+def write_text(file_path, values: list):
     """ Function: 将列表类型数据写入文本文档中，逐行写入。
     args:
         - file_path: 文本文档的路径
@@ -96,63 +99,53 @@ def wirte_text(file_path, values: list):
 
     path.write_text("\n".join(values))
 
-def find_keys_by_value( my_dict, value_to_find):
-    """ Function: 通过字典的值去查找与配对应字典的键
-    args:
-        - my_dict:  字典
-        - value_to_find: 值
-    return:
-        - keys: 值对应的键； 无对应的键则返回为空
-    """
-    for key, value in my_dict.items():
-        if value == value_to_find:
-            return key
-    return None
-
-def wirte_csv_values(file_path, values, mode="a+"):
+def write_csv_values(file_path, values, mode="a+"):
     with open(file_path, mode, newline='') as csvfile:
         csv_writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         csv_writer.writerow(values)
 
+
+# ------------------------------------------------   Function： 获取文件（file）  ------------------------------------------------
 def get_file_all(file_path, suffix):
+    """ 获取指定目录下的所有文件路径 """
     files = []
     for ext in suffix:
         files.extend(glob.glob(os.path.join(file_path, f'**/**{ext}'),  recursive=True))
     return files
 
-
-    
-def read_config(self, file_path):
-    # 创建 ConfigParser 对象
-    config = configparser.ConfigParser()
-    # 读取配置文件
-    config.read(file_path)
-    return config
-
-def is_value_exist(self, text, pattern):
+def is_value_exist(text, pattern):
+    """ 判断是否存在某个特定的值 """
     match = re.findall(pattern, text)
     if match:
         return True
     return None
 
-def find_value(self, text, pattern):
+def find_value(text, pattern):
+    """ 查找符合模式的第一个匹配项 """
     match = re.search(pattern, text)
     if match:
         return match
     else:
         return None
 
-def write_csv_values(self, file_path, values):
-    with open(file_path, mode='a+', newline='', encoding='utf-8') as file:
-        writer = csv.writer(file)
-        writer.writerow(values)
+def get_images_all(directory):
+    """ 获取指定目录下的所有图像文件路径 """
+    image_extensions = ["*.jpg", "*.jpeg", "*.png"]
+    image_paths = []
+    for root, _, files in os.walk(directory):
+        for ext in image_extensions:
+            for image in fnmatch.filter(files, ext):
+                image_paths.append(os.path.join(root, image))
 
-def get_current_time(self):
+    return image_paths
+# ------------------------------------------------   Function： 获取数据（time）  ------------------------------------------------
+def get_current_time():
+    """ 获取当前系统时间 """
     current_time = datetime.now()
     return current_time 
 
-def time_difference_in_minutes(self, start_time, end_time):
-
+def time_difference_in_minutes(start_time, end_time):
+    """ 计算两个时间差值并以分钟为单位返回 """
     time_difference = end_time - start_time
     
     time_difference_seconds = time_difference.total_seconds()
@@ -160,20 +153,8 @@ def time_difference_in_minutes(self, start_time, end_time):
     
     return time_difference_minutes
 
-@staticmethod
-def read_yaml_dict(yaml_path):
 
-    yaml_file = Path(yaml_path)  
-    if yaml_file.exists():  
-        with yaml_file.open('r', encoding='utf8') as file:  
-            data = yaml.safe_load(file)  
-    else:  
-        return False
-    
-    return data
-
-
-
+# ------------------------------------------------   Function： 音频处理   ------------------------------------------------
 def play_audio(file_path, second):
     """ 播放目录下所有的音频文件 """
     for dirpath, _, filenames in os.walk(file_path):
@@ -182,15 +163,9 @@ def play_audio(file_path, second):
             playsound(audio_path)
             time.sleep(second)
 
-import pandas as pd
-import csv
-import cv2
-import os
-import fnmatch
-
-
+# ------------------------------------------------   Function： 不常用的方法  ------------------------------------------------
 def capture_single_frame(rtsp_url, save_path, crop_x):
-
+    """ 从RTSP流中抓取单帧并保存到本地磁盘 （摄像头拍摄）"""
     cap = cv2.VideoCapture(rtsp_url)
     if not cap.isOpened():
         print("Error: Unable to open the RTSP stream.")
@@ -212,21 +187,27 @@ def capture_single_frame(rtsp_url, save_path, crop_x):
     finally:
         cap.release()
 
-def write_csv_values(file_path, values):
-    with open(file_path, mode='a+', newline='', encoding='utf-8') as file:
-        writer = csv.writer(file)
-        writer.writerow(values)
+def find_keys_by_value( my_dict, value_to_find):
+    """ Function: 通过字典的值去查找与配对应字典的键
+    args:
+        - my_dict:  字典
+        - value_to_find: 值
+    return:
+        - keys: 值对应的键； 无对应的键则返回为空
+    """
+    for key, value in my_dict.items():
+        if value == value_to_find:
+            return key
+    return None
 
-def get_images(directory):
-    image_extensions = ["*.jpg", "*.jpeg", "*.png"]
-    image_paths = []
-    for root, _, files in os.walk(directory):
-        for ext in image_extensions:
-            for image in fnmatch.filter(files, ext):
-                image_paths.append(os.path.join(root, image))
 
-    return image_paths
 
-def read_txt_values(file_path):
-    with open(file_path, 'r') as file:
-        return file.readlines()
+
+
+
+
+
+
+
+
+

@@ -19,6 +19,8 @@ class LogDriver:
 
         self.log_path = file_path
 
+        self.logger_init()  # 初始化 logger
+
     def logger_init(self):
         """ 配置 logger """
         self.handler = logging.FileHandler(self.log_path, 'a+')
@@ -34,23 +36,14 @@ class LogDriver:
         self.logger.addHandler(self.rf_handler)
 
     def info(self, message):
-        """
-        记录 log 信息。
-        Args:
-            message (str): 需要记录的日志信息。
-        """
         # self.logger_init()
         self.logger.info(message)
-        self.logger.removeHandler(self.handler)
-        self.logger.removeHandler(self.rf_handler)
+        # self.logger.removeHandler(self.handler)
+        # self.logger.removeHandler(self.rf_handler)
         
     def error(self, message):
-        """
-        记录 error 信息。
-        Args:
-            message (str): 需要记录的 error 信息。
-        """
+
         # self.logger_init()
         self.logger.error(message)
-        self.logger.removeHandler(self.handler)
-        self.logger.removeHandler(self.rf_handler)
+        # self.logger.removeHandler(self.handler)
+        # self.logger.removeHandler(self.rf_handler)
