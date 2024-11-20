@@ -69,20 +69,21 @@ class YandexPage:
     def yandex_mijia_app(self):
         # UI操作压测 50次左右 yandex app 脚本会出问题
         elements = self.elements["yandex_app_info"]
-        u = AirtestTools()
 
-        u.start_app(elements["app_package_name"])
-        u.wait_seconds(10)
+        self._ui.airtest_init()
+
+        self._ui.start_app(elements["app_package_name"])
+        self._ui.wait_seconds(10)
 
         for key, value in elements["icon_path"].items():
             print(f">>> 点击 {key}; element: {value}")
-            u.click_icon(value)
-            u.wait_seconds(5)
+            self._ui.click_icon_air(value)
+            self._ui.wait_seconds(5)
         
-        u.keyevent_back()
+        self._ui.keyevent_back_air()
 
-        u.wait_seconds(5)
-        u.close_app(elements["app_package_name"])
+        self._ui.wait_seconds(5)
+        self._ui.close_app(elements["app_package_name"])
         
 
 class TestIntegration(YandexPage):
@@ -90,9 +91,17 @@ class TestIntegration(YandexPage):
     def test_input_audio_command(self):
         """  yandex Alice: 在指定界面测试: 在输入框发送文本指令(语音文本)控制设备。
         """
+        self._ui.airtest_init()  # 初始化airtest
+
+        # 准备测试数据
         audio_texts = self.get_audio_text_dict()
         elements = self._elements["yandex_app_info"]["alice_page_elements"]
+        
+        # 进入Alice页面
+        self._ui.click_icon_air(self._elements["yandex_app_info"]["main_page_icon"]["alice_icon"])
+        self._ui.wait_seconds(2)
 
+        # 开始发送语音文本指令
         for i, value in enumerate(audio_texts):
             self.yandex_logs.info(f">>>[俄语指令]: {i+1} / {len(audio_texts)} send command: {value['俄语命令']}")
             self.yandex_logs.info(f">>>[中文翻译]: 中文翻译:  {value['中文命令']}")
@@ -106,7 +115,9 @@ class TestIntegration(YandexPage):
             self._ui.click_xpath_u2(elements["send_button_element"])
             self._ui.wait_seconds(6)
             self.yandex_logs.info(">>>[执行结果] Done.")
-
+            
+        self._ui.wait_seconds(4)
+        self._ui.keyevent_back_u2()
 
 
 if __name__ == "__main__":

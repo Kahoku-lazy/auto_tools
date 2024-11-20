@@ -9,7 +9,7 @@ import logging
 
 class LogDriver:
 
-    def __init__(self, file_path, logger_name="root"):
+    def __init__(self, file_path, logger_name="root", console_printing=True):
         
         self.logger = logging.Logger(logger_name)
         self.logger.setLevel(logging.INFO)
@@ -19,7 +19,11 @@ class LogDriver:
 
         self.log_path = file_path
 
+        self.console_printing = console_printing    # 是否输出到控制台
+
         self.logger_init()  # 初始化 logger
+
+
 
     def logger_init(self):
         """ 配置 logger """
@@ -32,18 +36,14 @@ class LogDriver:
         self.logger.addHandler(self.handler)
 
         # 控制台打印日志
-        self.rf_handler.setFormatter(formatter)
-        self.logger.addHandler(self.rf_handler)
+        if self.console_printing:
+            self.rf_handler.setFormatter(formatter)
+            self.logger.addHandler(self.rf_handler)
 
     def info(self, message):
-        # self.logger_init()
+
         self.logger.info(message)
-        # self.logger.removeHandler(self.handler)
-        # self.logger.removeHandler(self.rf_handler)
         
     def error(self, message):
 
-        # self.logger_init()
         self.logger.error(message)
-        # self.logger.removeHandler(self.handler)
-        # self.logger.removeHandler(self.rf_handler)

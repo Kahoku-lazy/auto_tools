@@ -9,10 +9,15 @@ import time
 import serial
 import threading
 
+from utils.log_modules import LogDriver
+
 class SerialModules:
     def __init__(self):
         """ 初始化串口模块 """
         self.serial = serial.Serial()
+
+        log_path = 'runner/logs/serial_log.log'
+        self.seral_log = LogDriver(log_path, console_printing=False)
 
         self.keep_running = True
         
@@ -23,7 +28,7 @@ class SerialModules:
         self.serial.timeout = timeout
 
         # 缓冲区大小 默认 1M 空间
-        self.serial.set_buffer_size(rx_size = rx_size, tx_size = tx_size) 
+        # self.serial.set_buffer_size(rx_size = rx_size, tx_size = tx_size) 
 
         # 清空缓冲区
         # self.serial.reset_input_buffer() 
@@ -41,9 +46,9 @@ class SerialModules:
     def read_data(self):
         """持续从串口读取数据"""
         while self.keep_running:
-            if self.serial.in_waiting > 0:
-                data = self.serial.read(self.serial.in_waiting)
-                self.process_data(data)
+            # data = self.serial.read(self.serial.in_waiting)
+            data = self.serial.readline()
+            self.process_data(data)
             time.sleep(0.01)  # 每10ms读取一次
 
     def write_data(self, command: tuple, send_interval=1):
@@ -67,38 +72,57 @@ class SerialModules:
 
     def process_data(self, data):
         """处理接收到的数据"""
-        # print("Received:", data.decode())
+        try:
+            data = data.decode('utf-8')
+        except Exception as e:
+            data = str(data)  
+        self.seral_log.info(data)
         self._filter_data(data)
 
     def _filter_data(self, data):
         
-        if "Here".encode() in data:
-            print(">>> [info]: 收到 Hello 消息")
+        if "switch on" in data:
+            print(f">>>[assert]: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())} 设备打开； 收到 switch on 消息")
+        
+        if "switch off" in data:
+            print(f">>>[assert]: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())} 设备关闭； 收到 switch off 消息")
 
-    def start(self):
-        """启动读取线程"""
-        threading.Thread(target=self.read_data, daemon=True).start()
+    # def start(self):
+    #     """启动读取线程"""
+    #     threading.Thread(target=self.read_data, daemon=True).start()
 
     def stop(self):
         """停止读写操作"""
         self.keep_running = False
         self._close_serial()
 
+    # def main(self, command: tuple, send_interval=1):
+    #     self._open_serial()
 
-    def main(self, command: tuple, send_interval=1):
+    #     self.start()
+    #     try:
+    #         while True:
+    #             # self.write_data(command, send_interval)
+    #             pass
+    #     except KeyboardInterrupt:
+    #         print(">>>[end]: 程序强制终止")
+    #         self.stop()
+    #     finally:
+    #         pass
+
+    def main(self):
+
         self._open_serial()
-
-        self.start()
         try:
             while True:
-                # print(f">>> 开始发送命令：{command}")
-                self.write_data(command, send_interval)
+                self.read_data()
+                pass
         except KeyboardInterrupt:
             print(">>>[end]: 程序强制终止")
             self.stop()
-
         finally:
             pass
+        
 
 if __name__ == "__main__":
     

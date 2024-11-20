@@ -4,11 +4,8 @@
 @description: 基础方法, 包括文件操作, 字符串处理, 图片处理, 模型使用等
 @version: 1.0
 """
-import json, yaml, csv, sqlite3
-import re, sys, shutil, os, logging
-import glob, cv2, torch
-# import xml.etree.ElementTree as ET
-import numpy as np
+import json, yaml, csv, re, os
+import glob, cv2
 import pandas as pd
 import configparser 
 from datetime import datetime
@@ -20,11 +17,6 @@ import fnmatch
 import os
 import time
 from playsound import playsound
-
-# import PIL
-# from cnocr import CnOcr
-# from difflib import SequenceMatcher
-# # from ultralytics import YOLO
 from pathlib import Path
 
 
@@ -87,6 +79,11 @@ def read_config(file_path):
     config = configparser.ConfigParser()
     config.read(file_path)
     return config
+
+def read_json(json_path):
+    with open(json_path, 'r') as f:
+        configs = json.load(f)
+    return configs
 
 # ------------------------------------------------   Function： 文件写入（data）  ------------------------------------------------
 def write_text(file_path, values: list):
