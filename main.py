@@ -1,3 +1,13 @@
+""" 
+@ author: Kahoku
+@ date: 2024/08
+@ description:  多进程运行脚本
+@update: 2024/11
+@ version: 2.1
+    1. 执行测试用例
+    2. 获取设备日志
+    3. 通过设备日志断言操作结果
+"""
 from multiprocessing import Process
 
 from runner.runner import Runner

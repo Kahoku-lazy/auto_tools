@@ -1,3 +1,15 @@
+""" 
+@ author: Kahoku
+@ date: 2024/08
+@ description:  图像识别算法
+@update: 2024/11
+@ version: 2.1
+@ update:
+    1. 增加了多尺度匹配算法
+    2. 修改了返回值
+    3. 修改了返回值的类型
+"""
+
 import cv2
 import numpy as np
 
@@ -98,17 +110,11 @@ class SIFTFeatureMatcher:
 if __name__ == '__main__':
 
     # 加载图像和模板
-    image = cv2.imread(r'D:\Kahoku\auto_tools\screenshot.png')
-    template = cv2.imread(r'D:\Kahoku\auto_tools\config\govee\icon\detail_page\H6079\switch_0.png')
+    image = cv2.imread('screenshot.png')
+    template = cv2.imread("template.jpg")
     
     # 创建对象并进行匹配
     template_matcher = TemplateMatcher()
     result = template_matcher.match(image.copy(), template)
     print(result)
 
-    multi_scale = MultiScale()
-    result = multi_scale.match(image.copy(), template)
-    print(result)
-    sift_matcher = SIFTFeatureMatcher()
-    result = sift_matcher.match(image.copy(), template)
-    print(result)

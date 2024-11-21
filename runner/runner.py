@@ -1,3 +1,10 @@
+""" 
+@ author: Kahoku
+@ date: 2024/08
+@ description:  运行器
+@update: 2024/11
+"""
+
 from app.ui_tools import UIModule
 # from utils.log_modules import LogDriver
 from utils.method import read_csv_as_dict

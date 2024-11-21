@@ -1,8 +1,11 @@
-import sys
+""" 
+@ author: Kahoku
+@ date: 2024/08
+@ description:  UI模块 业务功能
+@update: 2024/11
+"""
+
 from pathlib import Path
-# ROOT = Path(__file__).parents
-# FILE = str(ROOT[1])
-# sys.path.append(FILE)
 
 from utils.ui_controller import AndroidDeviceUiTools
 from utils.method import play_audio, read_yaml_as_dict, read_config, read_csv_as_dict
@@ -16,16 +19,16 @@ class UIModule:
         
         self._config= read_config(CONFIG_PATH)
 
-        # 支持的动作列表: 点击/滑动/查找/等待
-        self.action_list = self.get_section_name_values("action")
-        # 支持的定位方式列表: 元素/文本/图片
-        self.location_method_list = self.get_section_name_values("location_method")
+        self.action_list = self.get_section_name_values("action")    # 支持的动作列表: 点击/滑动/查找/等待
+        self.location_method_list = self.get_section_name_values("location_method") # 支持的定位方式列表: 元素/文本/图片
 
-        self._u2 = AndroidDeviceUiTools(ocr_language='ch')
-        self.test_logs = LogDriver("runner/logs/test_logs.log")
+        # UI 操作方法
+        self._u2 = AndroidDeviceUiTools(self._config("OCR_Config", "language"))
+        self.test_logs = LogDriver(self._config("Logs", "runner_log"))     # LogDriver 保持路径
 
     """ |------------------------------------ 功能： 配置信息处理 ----------------------------------| """
     def get_ui_icon_config(self):
+
         """ 获取UI界面图标的截图配置信息; 配置文件只支持两种格式： yaml和csv"""
         config_path = Path(self._config.get("ui_elements", "icon_config"))
         if not config_path.exists():
@@ -42,8 +45,7 @@ class UIModule:
         """ 获取配置文件中section下的所有键值对,返回一个列表"""
         action = self._config.items(section_name)
         converted_list = [item for tuple_item in action for item in tuple_item]
-        return converted_list
-                    
+        return converted_list            
 
     """ |----------------------------------------------------- 功能：异常处理 ---------------------------------------------------| """
 

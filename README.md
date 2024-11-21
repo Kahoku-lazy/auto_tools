@@ -1,21 +1,57 @@
-# auto_tools  工具集合
+# auto_tools App UI 自动化代码
+
+## 简介
+1. 使用 图像识别的方法 做UI自动化测试
 
 
+## 代码部分
+- uiatutomator2 模拟器操作
+    抓取定位元素工具下载地址: URL: https://uiauto.dev/
+    1. 安装: pip3 install -U uiautodev -i https://pypi.doubanio.com/simple
+    2. 运行: uiauto.dev  or python3 -m uiautodev
 
-## aigc_test_tools: 图生灯效测试工具
-#### 简介
-1. 通过接口将图片转为链接，并输出图片名称，图片链接地址，图片大小，图片格式等信息
-2. 使用接口对图片复杂度进行分类; 图片复杂度分为 1,2,3,4,5 五个等级
-3. 使用接口调用图转灯效功能, 输出图片名称，转换后像素图片链接， 转换后上灯效果图片。
-#### 硬件环境
-1. 摄像头，设备 ，接口文档
+    -- airtest 图片点击方法: https://github.com/AirtestProject/Airtest
+    1. api 教程： https://airtest.readthedocs.io/en/latest/all_module/airtest.core.api.html
+
+    -- OmniParser AI模型 UI识别工具: https://github.com/microsoft/OmniParser
+    1. 模型库：https://huggingface.co/spaces/microsoft/OmniParser
+
+    omniparser.py
+
+    多模型备选方案: ollama, 优势: 多模型且可本地部署，离线服务
+
+    -- PaddleOCR 文字识别工具: https://github.com/PaddlePaddle/PaddleOCR
+    https://paddlepaddle.github.io/PaddleOCR/latest/paddlex/quick_start.html#python
+    --- 备选方案: CnOcr
+    -- Poco 多平台:    https://poco.readthedocs.io/en/latest/source/poco.sdk.html
+    from poco.drivers.android.uiautomation import AndroidUiautomationPoco
+
+    self._poco = AndroidUiautomationPoco()
+    self._poco(xpath=element_xpath).wait(timeout=timeout).click()
+    
+功能：
+    1. PP-OCR: https://paddlepaddle.github.io/PaddleOCR/latest/ppocr/infer_deploy/python_infer.html#1
+    2. Airtest 图片点击方法:
+        -- TemplateMatching
+        -- MultiScaleTemplateMatchingPre
+        -- SIFTMatching
 
 
-## kahoku_tools: Android App +  serial 串口 工具
-#### 简介
-1. 通过Uiautomator2 控制Android串口
-2. 使用Python 接收与发送串口指令
-3. 使用pandas，re 筛选串口日志
+        -- 识别方法:
+        1. MultiScaleTemplateMatchingPre, 
+        2. TemplateMatching, 
+        3. SURFMatching, 
+        4. BRISKMatching, 
+        5. MultiScaleTemplateMatchingPre, 
+        6. TemplateMatching
+        MultiScaleTemplateMatchingPre 、 
+        TemplateMatching 、 SURFMatching 
+        和 BRISKMatching
+        -- 问题： 半透明或透明背景识别率低， 当前可实践的替代方案: YOLO;  备选方案: OmniParser
+    3. Poco 多平台（游戏类优先选择）
+    4. 飞桨OCR 文字识别工具
+
 
 ## 收藏
 1. wd14-tagger-standalone
+2. OmniParser

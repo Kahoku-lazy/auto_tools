@@ -2,7 +2,6 @@
 @ author: Kahoku
 @ date: 2024/08
 @ description: 串口模块接收发送日志与 日志模块交互。
-    1. serial_modules.py  log_modules.py
 @ version: 1.0
 """
 import time

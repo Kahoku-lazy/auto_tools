@@ -1,3 +1,9 @@
+""" 
+@ author: Kahoku
+@ date: 2024/08
+@ description:  数据库操作类
+"""
+
 import sqlite3
 
 class MyDatabase:

@@ -1,71 +1,25 @@
 """ 
 @ author: Kahoku
 @ date: 2024/08
-@ description: 
-    -- uiatutomator2 模拟器操作
-        抓取定位元素工具下载地址: URL: https://uiauto.dev/
-        1. 安装: pip3 install -U uiautodev -i https://pypi.doubanio.com/simple
-        2. 运行: uiauto.dev  or python3 -m uiautodev
-
-    -- airtest 图片点击方法: https://github.com/AirtestProject/Airtest
-        1. api 教程： https://airtest.readthedocs.io/en/latest/all_module/airtest.core.api.html
-
-    -- OmniParser AI模型 UI识别工具: https://github.com/microsoft/OmniParser
-        1. 模型库：https://huggingface.co/spaces/microsoft/OmniParser
-
-        omniparser.py
-
-        #  多模型备选方案: ollama, 优势: 多模型且可本地部署，离线服务
-    
-    -- PaddleOCR 文字识别工具: https://github.com/PaddlePaddle/PaddleOCR
-        https://paddlepaddle.github.io/PaddleOCR/latest/paddlex/quick_start.html#python
-        --- 备选方案: CnOcr
-    -- Poco 多平台:    https://poco.readthedocs.io/en/latest/source/poco.sdk.html
-        from poco.drivers.android.uiautomation import AndroidUiautomationPoco
-
-        self._poco = AndroidUiautomationPoco()
-        self._poco(xpath=element_xpath).wait(timeout=timeout).click()
-
+@ description:  Android 设备UI自动化工具集合
 @update: 2024/11
 @ version: 2.1
-    1. WEditor 工具替换为 uiauto
-    2. 新增获取APP日志功能
-
-@ 功能：
-    1. PP-OCR: https://paddlepaddle.github.io/PaddleOCR/latest/ppocr/infer_deploy/python_infer.html#1
-    2. Airtest 图片点击方法:
-        -- TemplateMatching
-        -- MultiScaleTemplateMatchingPre
-        -- SIFTMatching
-
-
-        -- 识别方法:
-        1. MultiScaleTemplateMatchingPre, 
-        2. TemplateMatching, 
-        3. SURFMatching, 
-        4. BRISKMatching, 
-        5. MultiScaleTemplateMatchingPre, 
-        6. TemplateMatching
-        MultiScaleTemplateMatchingPre 、 
-        TemplateMatching 、 SURFMatching 
-        和 BRISKMatching
-        -- 问题： 半透明或透明背景识别率低， 当前可实践的替代方案: YOLO;  备选方案: OmniParser
-    3. Poco 多平台（游戏类优先选择）
-    4. 飞桨OCR 文字识别工具
-
+    1. 新增获取APP日志功能
 """
-import os,cv2
-import numpy as np
-from time import sleep
-import uiautomator2 as u2
-from airtest.core.api import *
-# from poco.drivers.android.uiautomation import AndroidUiautomationPoco
-from paddleocr import PaddleOCR, draw_ocr
+import os
+import cv2
 import difflib
 import psutil
+import numpy as np
+from time import sleep
 
-# import sys
-# sys.path.append(r'D:\Kahoku\auto_tools')
+# UI自动化工具选用
+import uiautomator2 as u2
+from airtest.core.api import *
+from paddleocr import PaddleOCR, draw_ocr
+
+
+#  图片识别算法选用
 from utils.template_matching import TemplateMatcher, MultiScale, SIFTFeatureMatcher
 
 class AndroidDeviceUiTools:
@@ -80,23 +34,11 @@ class AndroidDeviceUiTools:
 
 
     def __init__(self, ocr_language='ru'):
-        """ UI自动化工具选用, 初始化选择: 
-            1. Uiautomator2: 默认初始化启动
-            2. Poco: 需要手动调用 poco_init() 函数进行初始化
-            3. Airtest: 需要手动调用 airtest_init() 函数进行初始化
-            
-            #  ---------- 废弃 --------------------
-            4. PPOcr: 不用初始化, 默认德语(ru)
-            4. U2: 可手动调用 u2_init() 函数进行初始化 (不用初始化)
-        """
-
-        pass
-        # self._poco = AndroidUiautomationPoco()
         self._u2 = u2.connect()
-        # init_device("Android")   # Airtest 
+
         # language: 语言类型，默认为'ru'(俄语)，可选( 其它 可去查询 PaddleOCR 支持的语言):'ch'(中文)、'en'(英语)、'ru'(俄语)
-        self.oce_language = ocr_language
-        self._ocr = PaddleOCR(use_angle_cls=True, lang=self.oce_language)  
+        self.ocr_language = ocr_language
+        self._ocr = PaddleOCR(use_angle_cls=True, lang=self.ocr_language)  
 
     """ --------------------------------------------------  init:  初始化 android UI 自动化工具 --------------------------------------------------------------------------------"""
     def airtest_init(self):
@@ -104,9 +46,6 @@ class AndroidDeviceUiTools:
 
     def u2_init(self):
         self._u2 = u2.connect()
-
-    # def poco_init(self):
-    #     self._poco = AndroidUiautomationPoco()
 
     """ --------------------------------------------------  function:  APP 启动与关闭 or 强制延时等待  --------------------------------------------------------------------------------"""
     def start_app(self, package_name):
@@ -119,10 +58,8 @@ class AndroidDeviceUiTools:
         sleep(seconds)
 
     """ --------------------------------------------------  function:  UI 页面点击方法  --------------------------------------------------------------------------------"""
-    # def click_xpath_poco(self, element_xpath, timeout=0.5):
-    #     self._poco(xpath=element_xpath).wait(timeout=timeout).click()
 
-    # ------------------------------------------------------------- U2 元素点击方法 --------------------------------------------------------------------------------
+    # ------------------------------------------------------------- 元素控件 --------------------------------------------------------------------------------
     def click_xpath_u2(self, element_xpath, timeout=0.5):
         element_xpath = self._u2.xpath(element_xpath)
         # bounds = element_xpath.bounds
@@ -146,7 +83,7 @@ class AndroidDeviceUiTools:
         x, y = coordinates
         self._u2.click(x,y)
 
-    # ------------------------------------------------------------- Airtest 图片点击方法 --------------------------------------------------------------------------------
+    # ------------------------------------------------------------- 图像识别 --------------------------------------------------------------------------------
     def click_icon_air(self, icon_path):
         if exists(Template(icon_path)):
             touch(Template(icon_path))
@@ -155,7 +92,15 @@ class AndroidDeviceUiTools:
         """ 判断图标是否存在; 找到目标返回坐标点, 未找到目标返回False """
         return exists(Template(icon_path))
 
-    # ------------------------------------------------------------- PaddleOCR 文字识别工具 --------------------------------------------------------------------------------
+    def click_image(self, icon_path):
+        image = self.get_screenshot()
+        template = cv2.imread(icon_path)
+        # x1,y1,x2,y2 = TemplateMatcher().match(image, template)
+        x1,y1,x2,y2 = SIFTFeatureMatcher().match(image, template)
+        x, y = self.rectangle_center(x1,y1,x2,y2)
+        print(x1,y1,x2,y2)
+        self.click_points((x,y))
+    # ------------------------------------------------------------- OCR 识别--------------------------------------------------------------------------------
     def click_text_ocr(self, text, height_rate=1):
         """ 通过OCR识别图像中的文本, 然后点击匹配到的第一个结果。
         args:
@@ -194,14 +139,7 @@ class AndroidDeviceUiTools:
                 return True
         return False
     
-    def click_image(self, icon_path):
-        image = self.get_screenshot()
-        template = cv2.imread(icon_path)
-        # x1,y1,x2,y2 = TemplateMatcher().match(image, template)
-        x1,y1,x2,y2 = SIFTFeatureMatcher().match(image, template)
-        x, y = self.rectangle_center(x1,y1,x2,y2)
-        print(x1,y1,x2,y2)
-        self.click_points((x,y))
+
 
     def click_text_relative_location_ocr(self, text, x_axial:int = 0, y_axial:int = 0):
 
@@ -360,8 +298,6 @@ class AndroidDeviceUiTools:
         os.system(logcat_command)
 
 
-
-
     """ --------------------------------------------------  function:  Android 操作辅助方法: 计算  --------------------------------------------------------------------------"""
     @staticmethod
     def rectangle_center(x1, y1, x2, y2):
@@ -369,13 +305,9 @@ class AndroidDeviceUiTools:
         center_x = (x1 + x2) / 2
         center_y = (y1 + y2) / 2
         return center_x, center_y
-
-
-if __name__ == "__main__":
-    a = AndroidDeviceUiTools()
     
-    # home (274, 2716) (0.19, 0.893)
-
-    a.get_screenshot(True)
-
-    a.click_image(r'D:\Kahoku\auto_tools\config\govee\icon\detail_page\H6079\switch_0.png')
+    @staticmethod
+    def compare_strings(str1, str2):
+        """ 比较两个字符串相似度 -1 ~ 1"""
+        seq_matcher = difflib.SequenceMatcher(None, str1, str2)
+        return seq_matcher.ratio()
