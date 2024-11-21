@@ -45,7 +45,7 @@ class UIModule:
         return converted_list
                     
 
-    """ |------------------------------------ 功能：异常处理 ----------------------------------| """
+    """ |----------------------------------------------------- 功能：异常处理 ---------------------------------------------------| """
 
     def _check_action_input(self, action_type):
         """ 检查用户输入的操作类型是否合法 """
@@ -57,7 +57,7 @@ class UIModule:
         if location_method not in self.location_method_list:
             raise ValueError("请输入正确的定位方式")
 
-    """ |------------------------------------ 功能: UI 动作 (模拟视觉) ----------------------------------| """
+    """ |---------------------------------------------------------- 功能: UI 动作 (模拟视觉) -------------------------------------------------------| """
     def click_action(self, element, element_type):
 
         element_type = element_type.lower()
@@ -73,6 +73,10 @@ class UIModule:
         elif element_type == "xpath":
             config = self.get_ui_icon_config()["ELEMENTS"]
             self._u2.click_xpath_u2(config[element])
+
+    def click_text_relative_location_action(self, element, x_axial, y_axial):
+        """ 点击文本相对位置的元素 """
+        self._u2.click_text_relative_location_ocr(element, x_axial, y_axial)
 
     def swipe_up_action(self, element, element_type):
         """ 向上滑动直至某个元素出现 """
@@ -105,7 +109,7 @@ class UIModule:
             self._u2.wait_seconds(int(action_value))
 
 
-    """ |------------------------------------ 函数: 业务功能 实现 ----------------------------------| """
+    """ |------------------------------------------------- 函数: 业务功能 实现 -------------------------------------------------------| """
     def simulation_operation(self, location_method, action_type, action_value):
 
         # 元素定位方式

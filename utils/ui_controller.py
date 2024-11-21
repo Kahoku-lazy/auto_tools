@@ -34,29 +34,39 @@
 @ 功能：
     1. PP-OCR: https://paddlepaddle.github.io/PaddleOCR/latest/ppocr/infer_deploy/python_infer.html#1
     2. Airtest 图片点击方法:
+        -- TemplateMatching
+        -- MultiScaleTemplateMatchingPre
+        -- SIFTMatching
+
+
+        -- 识别方法:
         1. MultiScaleTemplateMatchingPre, 
         2. TemplateMatching, 
         3. SURFMatching, 
         4. BRISKMatching, 
         5. MultiScaleTemplateMatchingPre, 
         6. TemplateMatching
+        MultiScaleTemplateMatchingPre 、 
+        TemplateMatching 、 SURFMatching 
+        和 BRISKMatching
         -- 问题： 半透明或透明背景识别率低， 当前可实践的替代方案: YOLO;  备选方案: OmniParser
     3. Poco 多平台（游戏类优先选择）
     4. 飞桨OCR 文字识别工具
 
 """
-import os
+import os,cv2
 import numpy as np
 from time import sleep
 import uiautomator2 as u2
 from airtest.core.api import *
-from poco.drivers.android.uiautomation import AndroidUiautomationPoco
+# from poco.drivers.android.uiautomation import AndroidUiautomationPoco
 from paddleocr import PaddleOCR, draw_ocr
 import difflib
 import psutil
 
-
-
+# import sys
+# sys.path.append(r'D:\Kahoku\auto_tools')
+from utils.template_matching import TemplateMatcher, MultiScale, SIFTFeatureMatcher
 
 class AndroidDeviceUiTools:
     
@@ -95,8 +105,8 @@ class AndroidDeviceUiTools:
     def u2_init(self):
         self._u2 = u2.connect()
 
-    def poco_init(self):
-        self._poco = AndroidUiautomationPoco()
+    # def poco_init(self):
+    #     self._poco = AndroidUiautomationPoco()
 
     """ --------------------------------------------------  function:  APP 启动与关闭 or 强制延时等待  --------------------------------------------------------------------------------"""
     def start_app(self, package_name):
@@ -109,8 +119,8 @@ class AndroidDeviceUiTools:
         sleep(seconds)
 
     """ --------------------------------------------------  function:  UI 页面点击方法  --------------------------------------------------------------------------------"""
-    def click_xpath_poco(self, element_xpath, timeout=0.5):
-        self._poco(xpath=element_xpath).wait(timeout=timeout).click()
+    # def click_xpath_poco(self, element_xpath, timeout=0.5):
+    #     self._poco(xpath=element_xpath).wait(timeout=timeout).click()
 
     # ------------------------------------------------------------- U2 元素点击方法 --------------------------------------------------------------------------------
     def click_xpath_u2(self, element_xpath, timeout=0.5):
@@ -184,6 +194,42 @@ class AndroidDeviceUiTools:
                 return True
         return False
     
+    def click_image(self, icon_path):
+        image = self.get_screenshot()
+        template = cv2.imread(icon_path)
+        # x1,y1,x2,y2 = TemplateMatcher().match(image, template)
+        x1,y1,x2,y2 = SIFTFeatureMatcher().match(image, template)
+        x, y = self.rectangle_center(x1,y1,x2,y2)
+        print(x1,y1,x2,y2)
+        self.click_points((x,y))
+
+    def click_text_relative_location_ocr(self, text, x_axial:int = 0, y_axial:int = 0):
+
+        """ 通过OCR识别图像中的文本, 然后点击匹配到的第一个结果。
+        args:
+        icon_path: 要点击的图标路径
+        language: 语言类型，默认为'ru'(俄语)，可选( 其它 可去查询 PaddleOCR 支持的语言):'ch'(中文)、'en'(英语)、'ru'(俄语)
+        """
+        # self._ocr = PaddleOCR(use_angle_cls=True, lang=self.ocr_language)  
+
+        def compare_strings(str1, str2):
+            seq_matcher = difflib.SequenceMatcher(None, str1, str2)
+            return seq_matcher.ratio()
+        
+        image = self.get_screenshot()
+        height, width, channels = image.shape
+
+        # 截取上半部分
+        upper_height = int(height * height_rate)
+        upper_part = image[:upper_height, :, :]
+        result = self._ocr.ocr(upper_part, cls=True)
+        for idx in result[0]:
+            if compare_strings(idx[1][0], text) > 0.8:
+                x1,y1= idx[0][0]; x2,y2 = idx[0][2]
+                x, y = self.rectangle_center(x1,y1,x2,y2)
+                self.click_points((x + x_axial, y + y_axial))
+
+
     """ --------------------------------------------------  function:  Android 滑动与拖动操作方法 --------------------------------------------------------------------------------"""
     def _swipe_y(self, flag: str = "up", height: float = 0.3):
         """ 滑动屏幕，向上或向下滑动，高度由height决定 """
@@ -331,3 +377,5 @@ if __name__ == "__main__":
     # home (274, 2716) (0.19, 0.893)
 
     a.get_screenshot(True)
+
+    a.click_image(r'D:\Kahoku\auto_tools\config\govee\icon\detail_page\H6079\switch_0.png')
