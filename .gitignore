@@ -171,6 +171,8 @@ cython_debug/
 *.log
 *.yaml
 *.ini
+*.mp4
+*.mp3
 
 
 # 忽略的目录
