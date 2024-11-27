@@ -23,8 +23,8 @@ class UIModule:
         self.location_method_list = self.get_section_name_values("location_method") # 支持的定位方式列表: 元素/文本/图片
 
         # UI 操作方法
-        self._u2 = AndroidDeviceUiTools(self._config("OCR_Config", "language"))
-        self.test_logs = LogDriver(self._config("Logs", "runner_log"))     # LogDriver 保持路径
+        self._u2 = AndroidDeviceUiTools(self._config.get("OCR_Config", "language"))
+        self.test_logs = LogDriver(self._config.get("Logs", "runner_log"))     # LogDriver 保持路径
 
     """ |------------------------------------ 功能： 配置信息处理 ----------------------------------| """
     def get_ui_icon_config(self):
@@ -65,16 +65,23 @@ class UIModule:
         element_type = element_type.lower()
         if element_type == "icon":      # icon 图标定位方式
             config = self.get_ui_icon_config()["ICON"]
-            self._u2.airtest_init()
             self._u2.click_icon_air(config[element])
 
         elif element_type == "text":    # 文本定位方式
-            self._u2.click_text_ocr(element)
+            # self._u2.click_text_ocr(element)
+            self._u2.click_image(element)
 
         #  准备弃用 元素定位方式
         elif element_type == "xpath":
             config = self.get_ui_icon_config()["ELEMENTS"]
             self._u2.click_xpath_u2(config[element])
+
+    def input_text_action(self, element, element_type):
+        """ 输入文本 """
+        element_type = element_type.lower()
+        if element_type == "icon":      # icon 图标定位方式
+            self._u2.airtest_init()
+            self._u2.input_text_air(element)
 
     def click_text_relative_location_action(self, element, x_axial, y_axial):
         """ 点击文本相对位置的元素 """
@@ -87,6 +94,8 @@ class UIModule:
     def swipe_down_action(self, element, element_type):
         """ 向下滑动直至某个元素出现 """
         self._u2.sliding_search_element_android(element=element, element_type=element_type, direction="up")
+
+
 
     def wait_element_action(self, element, seconds):
         """ 等待元素出现 """
@@ -109,14 +118,19 @@ class UIModule:
             self.swipe_down_action(action_value, element_type)
         elif action_type  == "wait"  or action_type == "等待":
             self._u2.wait_seconds(int(action_value))
+        elif action_type == "输入文本":
+            self.input_text_action(action_value, element_type)
+
 
 
     """ |------------------------------------------------- 函数: 业务功能 实现 -------------------------------------------------------| """
     def simulation_operation(self, location_method, action_type, action_value):
 
-        # 元素定位方式
+        # 检测用例输入数据是否合法
         self._check_location_method_input(location_method)
         self._check_action_input(action_type)
+
+        self._u2.airtest_init()
 
         if location_method == "启动":
             self._u2.start_app(action_value)

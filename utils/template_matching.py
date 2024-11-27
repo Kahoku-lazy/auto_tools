@@ -14,26 +14,37 @@ import cv2
 import numpy as np
 
 class TemplateMatcher:
-    def __init__(self, method=cv2.TM_CCOEFF_NORMED):
+    def __init__(self, method=cv2.TM_CCOEFF_NORMED, threshold=0.8):
         self.method = method
+        self.threshold = max(0.8, threshold)  # 确保阈值不低于0.8
 
     def match(self,image, template):
         h, w = template.shape[:2]
+
         res = cv2.matchTemplate(image, template, self.method)
+
+        threshold = 0.8
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
 
         if self.method in [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED]:
-            top_left = min_loc
+            if min_val <= self.threshold:
+                top_left = min_loc
+            else:
+                return None
         else:
-            top_left = max_loc
-        
+            if max_val >= self.threshold:
+                top_left = max_loc
+            else:
+                return None
+                
         bottom_right = (top_left[0] + w, top_left[1] + h)
         cv2.rectangle(image, top_left, bottom_right, (0, 255, 0), 2)
+
+        # cv2.imwrite('res.jpg', image)
 
         x1, y1 = top_left
         x2, y2 = bottom_right
         return x1, y1, x2, y2
-        # return image
 
 class MultiScale:
     def __init__(self, scales=None):
@@ -101,6 +112,7 @@ class SIFTFeatureMatcher:
             dst = cv2.perspectiveTransform(pts, M)
 
             image = cv2.polylines(image, [np.int32(dst)], True, (0, 255, 255), 3, cv2.LINE_AA)
+        # cv2.imwrite('result.png', image)
         points = np.int32(dst).flatten().tolist()
         y1, x1 = points[0:2]
         y2, x2 = points[4:6]
@@ -110,8 +122,12 @@ class SIFTFeatureMatcher:
 if __name__ == '__main__':
 
     # 加载图像和模板
-    image = cv2.imread('screenshot.png')
-    template = cv2.imread("template.jpg")
+    template_path = r"D:\Kahoku\auto_tools\config\yandex\yandex_icon\red.png"
+
+    image_path = r"D:\Kahoku\auto_tools\3.png"
+
+    image = cv2.imread(image_path)
+    template = cv2.imread(template_path)
     
     # 创建对象并进行匹配
     template_matcher = TemplateMatcher()

@@ -18,6 +18,9 @@ class SerialModules:
         log_path = 'runner/logs/serial_log.log'
         self.seral_log = LogDriver(log_path, console_printing=False)
 
+        log_path = 'runner/logs/filter_log.log'
+        self.filter_log = LogDriver(log_path, console_printing=True)
+
         self.keep_running = True
         
     def set_port_config(self, port, baudrate: int, timeout=1, rx_size = 1024 * 1024, tx_size = 128):
@@ -80,11 +83,17 @@ class SerialModules:
 
     def _filter_data(self, data):
         
+        # time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
+
         if "switch on" in data:
-            print(f">>>[assert]: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())} 设备打开； 收到 switch on 消息")
+
+            self.filter_log.info(f">>>[assert]:  设备打开； 串口返回 switch on 消息")
         
-        if "switch off" in data:
-            print(f">>>[assert]: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())} 设备关闭； 收到 switch off 消息")
+        elif "switch off" in data:
+            self.filter_log.info(f">>>[assert]:  设备关闭； 串口返回 switch off 消息")
+
+        if "color_configs_set_success" in data:
+            self.filter_log.info(f">>>[assert]:  颜色设置成功; 串口返回 color_configs_set_success 消息")
 
     # def start(self):
     #     """启动读取线程"""
@@ -115,19 +124,10 @@ class SerialModules:
         try:
             while True:
                 self.read_data()
-                pass
         except KeyboardInterrupt:
-            print(">>>[end]: 程序强制终止")
             self.stop()
+
         finally:
-            pass
+            print(">>>[end]: 串口程序终止")
         
-
-if __name__ == "__main__":
-    
-    serial_modules = SerialModules()
-    serial_modules.set_port_config(port = "COM3", baudrate = 115200)
-    command = ("00 00", "hex")
-    serial_modules.main(command)
-
 

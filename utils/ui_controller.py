@@ -19,8 +19,10 @@ from airtest.core.api import *
 from paddleocr import PaddleOCR, draw_ocr
 
 
+
 #  图片识别算法选用
 from utils.template_matching import TemplateMatcher, MultiScale, SIFTFeatureMatcher
+# from template_matching import TemplateMatcher, MultiScale, SIFTFeatureMatcher
 
 class AndroidDeviceUiTools:
     
@@ -95,11 +97,13 @@ class AndroidDeviceUiTools:
     def click_image(self, icon_path):
         image = self.get_screenshot()
         template = cv2.imread(icon_path)
-        # x1,y1,x2,y2 = TemplateMatcher().match(image, template)
-        x1,y1,x2,y2 = SIFTFeatureMatcher().match(image, template)
-        x, y = self.rectangle_center(x1,y1,x2,y2)
-        print(x1,y1,x2,y2)
-        self.click_points((x,y))
+        results = TemplateMatcher().match(image, template)
+        if results:
+            x, y = self.rectangle_center(*results)
+            self.click_points((x,y))
+        else:
+            raise Exception('No matching icon found')
+        
     # ------------------------------------------------------------- OCR 识别--------------------------------------------------------------------------------
     def click_text_ocr(self, text, height_rate=1):
         """ 通过OCR识别图像中的文本, 然后点击匹配到的第一个结果。
@@ -139,8 +143,6 @@ class AndroidDeviceUiTools:
                 return True
         return False
     
-
-
     def click_text_relative_location_ocr(self, text, x_axial:int = 0, y_axial:int = 0):
 
         """ 通过OCR识别图像中的文本, 然后点击匹配到的第一个结果。
@@ -166,7 +168,6 @@ class AndroidDeviceUiTools:
                 x1,y1= idx[0][0]; x2,y2 = idx[0][2]
                 x, y = self.rectangle_center(x1,y1,x2,y2)
                 self.click_points((x + x_axial, y + y_axial))
-
 
     """ --------------------------------------------------  function:  Android 滑动与拖动操作方法 --------------------------------------------------------------------------------"""
     def _swipe_y(self, flag: str = "up", height: float = 0.3):
@@ -201,12 +202,15 @@ class AndroidDeviceUiTools:
             self._swipe_y(direction, 0.3)
 
     """ --------------------------------------------------  function:  Android 文本框（文本输入）与 弹窗操作方法 --------------------------------------------------------------------------------"""
-    def input_text(self, element_xpath, text):
+    def input_text_u2(self, element_xpath, text):
         element_xpath = self._u2.xpath(element_xpath)
         if element_xpath.exists:
             element_xpath.set_text(text)
             return True
         return False
+    
+    def input_text_air(self, text_value):
+        text(text_value)
 
     """ --------------------------------------------------  function:  Android 模拟按键操作  --------------------------------------------------------------------------------"""
     def keyevent_back_air(self):
@@ -311,3 +315,17 @@ class AndroidDeviceUiTools:
         """ 比较两个字符串相似度 -1 ~ 1"""
         seq_matcher = difflib.SequenceMatcher(None, str1, str2)
         return seq_matcher.ratio()
+
+if __name__ == "__main__":
+    
+    ui = AndroidDeviceUiTools()
+
+    text_dict = {
+                "green": "Элис, включи зеленый свет на занавесках.", 
+                "red":"Алиса, включи красный свет на занавесках.",
+                "H6079": "тест 6079"
+            }
+    
+    # ui.input_text_u2('//*[@resource-id="com.yandex.iot:id/dialog_text_input"]',text_dict["H6079"])
+
+    ui.click_image(r"config\yandex\yandex_icon\detail_page_on.png")
