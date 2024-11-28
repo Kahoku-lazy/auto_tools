@@ -9,6 +9,7 @@ import serial
 import threading
 
 from utils.log_modules import LogDriver
+from utils.method import find_value
 
 class SerialModules:
     def __init__(self):
@@ -31,7 +32,6 @@ class SerialModules:
 
         # 缓冲区大小 默认 1M 空间
         # self.serial.set_buffer_size(rx_size = rx_size, tx_size = tx_size) 
-
         # 清空缓冲区
         # self.serial.reset_input_buffer() 
 
@@ -84,16 +84,9 @@ class SerialModules:
     def _filter_data(self, data):
         
         # time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
-
-        if "switch on" in data:
-
-            self.filter_log.info(f">>>[assert]:  设备打开； 串口返回 switch on 消息")
-        
-        elif "switch off" in data:
-            self.filter_log.info(f">>>[assert]:  设备关闭； 串口返回 switch off 消息")
-
-        if "color_configs_set_success" in data:
-            self.filter_log.info(f">>>[assert]:  颜色设置成功; 串口返回 color_configs_set_success 消息")
+        result = find_value(data, r"(switch on|switch off|color_configs_set_success)")
+        if result:
+            self.filter_log.info(f">>>[assert]: 串口返回 {result.group(1)} 消息")
 
     # def start(self):
     #     """启动读取线程"""

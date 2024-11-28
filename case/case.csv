@@ -1,5 +1,0 @@
-location_method,action_type,action_value
-文本,点击,1
-元素,等待,2
-文本,向上滑动,3
-元素,等待,3

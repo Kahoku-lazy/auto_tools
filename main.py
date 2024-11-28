@@ -13,9 +13,6 @@ from multiprocessing import Process
 from runner.runner import Runner
 from utils.serial_modules import SerialModules
 
-def screenshot():
-    Runner().get_app_screenshot()
-
 def get_device_serial_logs(port, baudrate):
     """ 获取设备日志 """
     serial_modules = SerialModules()
@@ -31,29 +28,29 @@ def main(count: int):
         # 2. minicap.py
 """
 if __name__ == "__main__":
-    
-    # screenshot()
 
-    test_case = Process(target=main, args=(100,))
+    main(5)
+
+    test_case = Process(target=main, args=(1,))
 
     port, baud_rate = "COM11", 921600
     ser = Process(target=get_device_serial_logs, args=(port, baud_rate,))
 
-
     # -------------------------------------- 启动进程  --------------------------------------
-    test_case.start()
-    ser.start()
+    # ser.start()
+    # test_case.start()
+    
 
-    # test_case.join()
-    # ser.join()
-    try:
-        test_case.join()
-        ser.join()
-    except KeyboardInterrupt:
-        print("进程被手动终止")
-    except Exception as e:
-        print(f"进程终止时发生异常: {e}")
-    finally:
-        # 此处可以添加清理代码，例如关闭设备连接等
-        print("进行清理操作...")
+    # # test_case.join()
+    # # ser.join()
+    # try:
+    #     test_case.join()
+    #     ser.join()
+    # except KeyboardInterrupt:
+    #     print("进程被手动终止")
+    # except Exception as e:
+    #     print(f"进程终止时发生异常: {e}")
+    # finally:
+    #     # 此处可以添加清理代码，例如关闭设备连接等
+    #     print("进行清理操作...")
 

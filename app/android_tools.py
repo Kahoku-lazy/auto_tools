@@ -7,13 +7,13 @@
 
 from pathlib import Path
 
-from utils.ui_controller import AndroidDeviceUiTools
+from utils.detection_system import AndroidDeviceUiTools
 from utils.method import play_audio, read_yaml_as_dict, read_config, read_csv_as_dict
 from utils.log_modules import LogDriver
 
 CONFIG_PATH = "config/config.ini"
 
-class UIModule:
+class AndroidUiAction:
 
     def __init__(self):
         
@@ -23,12 +23,11 @@ class UIModule:
         self.location_method_list = self.get_section_name_values("location_method") # 支持的定位方式列表: 元素/文本/图片
 
         # UI 操作方法
-        self._u2 = AndroidDeviceUiTools(self._config.get("OCR_Config", "language"))
+        self._android = AndroidDeviceUiTools(self._config.get("OCR_Config", "language"))
         self.test_logs = LogDriver(self._config.get("Logs", "runner_log"))     # LogDriver 保持路径
 
     """ |------------------------------------ 功能： 配置信息处理 ----------------------------------| """
     def get_ui_icon_config(self):
-
         """ 获取UI界面图标的截图配置信息; 配置文件只支持两种格式： yaml和csv"""
         config_path = Path(self._config.get("ui_elements", "icon_config"))
         if not config_path.exists():
@@ -39,7 +38,6 @@ class UIModule:
         
         if config_path.suffix == ".csv":
             return read_csv_as_dict(config_path)
-        
 
     def get_section_name_values(self, section_name):
         """ 获取配置文件中section下的所有键值对,返回一个列表"""
@@ -61,49 +59,42 @@ class UIModule:
 
     """ |---------------------------------------------------------- 功能: UI 动作 (模拟视觉) -------------------------------------------------------| """
     def click_action(self, element, element_type):
-
+        """ 点击元素操作 """
         element_type = element_type.lower()
-        if element_type == "icon":      # icon 图标定位方式
+        if element_type == "image": 
             config = self.get_ui_icon_config()["ICON"]
-            self._u2.click_icon_air(config[element])
-
-        elif element_type == "text":    # 文本定位方式
-            # self._u2.click_text_ocr(element)
-            self._u2.click_image(element)
-
+            self._android.click_image(config[element])
+        elif element_type == "text":
+            self._android.click_text(element)
         #  准备弃用 元素定位方式
         elif element_type == "xpath":
             config = self.get_ui_icon_config()["ELEMENTS"]
-            self._u2.click_xpath_u2(config[element])
+            self._android._click_xpath(config[element])
 
-    def input_text_action(self, element, element_type):
-        """ 输入文本 """
-        element_type = element_type.lower()
-        if element_type == "icon":      # icon 图标定位方式
-            self._u2.airtest_init()
-            self._u2.input_text_air(element)
-
-    def click_text_relative_location_action(self, element, x_axial, y_axial):
-        """ 点击文本相对位置的元素 """
-        self._u2.click_text_relative_location_ocr(element, x_axial, y_axial)
+    def input_text_action(self, text):
+        """ 输入文本操作 """
+        self._android.input_text(text)
 
     def swipe_up_action(self, element, element_type):
         """ 向上滑动直至某个元素出现 """
-        self._u2.sliding_search_element_android(element=element, element_type=element_type, direction="down")
+        if element_type == "image":
+            config = self.get_ui_icon_config()["ICON"]
+            self._android.sliding_search_element_image(config[element], direction="down")
+        elif element_type == "text":
+            self._android.sliding_search_element_text(text=element, direction="down")
 
     def swipe_down_action(self, element, element_type):
         """ 向下滑动直至某个元素出现 """
-        self._u2.sliding_search_element_android(element=element, element_type=element_type, direction="up")
+        if element_type == "image":
+            config = self.get_ui_icon_config()["ICON"]
+            self._android.sliding_search_element_image(config[element], direction="up")
+        elif element_type == "text":
+            self._android.sliding_search_element_text(text=element, direction="up")
 
+    def wait_action(self, seconds):
+        """ 等待 """
+        self._android.wait_seconds(seconds)
 
-
-    def wait_element_action(self, element, seconds):
-        """ 等待元素出现 """
-        self._u2.wait_seconds(seconds)
-
-    def wait_element_gone_action(self, element, seconds):
-        """ 点击元素, 直至元素消失 """
-        self._u2.wait_seconds(seconds)
 
     """ |------------------------------------ 页面功能实现: UI动作 (模拟人为操作) ----------------------------------| """
     
@@ -117,9 +108,9 @@ class UIModule:
         elif action_type == "向下滑动":
             self.swipe_down_action(action_value, element_type)
         elif action_type  == "wait"  or action_type == "等待":
-            self._u2.wait_seconds(int(action_value))
+            self._android.wait_seconds(int(action_value))
         elif action_type == "输入文本":
-            self.input_text_action(action_value, element_type)
+            self.input_text_action(action_value)
 
 
 
@@ -130,18 +121,20 @@ class UIModule:
         self._check_location_method_input(location_method)
         self._check_action_input(action_type)
 
-        self._u2.airtest_init()
-
         if location_method == "启动":
-            self._u2.start_app(action_value)
+            self._android.start_app(action_value)
+        elif location_method == "关闭":
+            self._android.close_app(action_value)
 
         # 检测方式
-        if location_method  == "icon" or location_method == "图片":
-            self.execute_action(action_type, action_value, element_type="icon")
-        elif location_method  == "element" or location_method == "元素":
-            self.execute_action(action_type, action_value, element_type="xpath")
-        elif location_method  == "text" or location_method == "文本":
+        if location_method == "图片":
+            self.execute_action(action_type, action_value, element_type="image")
+        
+        elif location_method == "文本":
             self.execute_action(action_type, action_value, element_type="text")
+
+        elif location_method == "元素":
+            self.execute_action(action_type, action_value, element_type="xpath")
 
 
 
