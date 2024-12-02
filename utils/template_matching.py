@@ -5,10 +5,10 @@
 @update: 2024/11
 @ version: 3.1
 @ update:
-    1. SIFT特征匹配器: 待优化，准确率不高
-    2. TemplateMatcher, MultiScale 使用的 cv2.TM_CCOEFF_NORMED 选择二者中最大值的结果
+    1. SIFT特征匹配器: 待优化，准确率不高； 针对不同尺寸的算法MultiScale 与 SIFI 准确率都待提高, 已测试的压缩尺寸[1.0, 0.9, 0.8, 0.7, 0.6, 0.5]
+    2. TemplateMatcher(针对同一尺寸分辨率手机), MultiScale(针对不同尺寸分辨率手机) 使用的 cv2.TM_CCOEFF_NORMED 选择二者中最大值的结果
         |- cv2.TM_CCOEFF_NORMED: 标准化相关系数匹配，值越大表示匹配越好。
-    3. 修改了返回值的类型： 返回值为： 左上角坐标，右下角坐标，匹配度
+    3. 修改了返回值的类型： 返回值为： 左上角坐标，右下角坐标，匹配置信度(当前算法越大越好, 范围[0 ~ 1])
 """
 
 import cv2

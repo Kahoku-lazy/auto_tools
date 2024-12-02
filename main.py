@@ -35,9 +35,6 @@ if __name__ == "__main__":
     ser.start()
     test_case.start()
     
-
-    # test_case.join()
-    # ser.join()
     try:
         test_case.join()
         ser.join()

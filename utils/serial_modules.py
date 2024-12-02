@@ -24,8 +24,6 @@ class SerialModules:
         self.filter_log = LogDriver(log_path, console_printing=True)
 
         self.keep_running = True
-
-    
         
     def set_port_config(self, port, baudrate: int, timeout=1, rx_size = 1024 * 1024, tx_size = 128):
         """ 设置端口和波特率; 缓冲区大小默认是1M """
@@ -45,7 +43,7 @@ class SerialModules:
 
     def read_data(self, data_queue):
         """持续从串口读取数据"""
-        while True:
+        while self.keep_running:
             data = self.serial.read(self.serial.in_waiting)
             if data:
                 data_queue.put(data)
@@ -56,12 +54,11 @@ class SerialModules:
     def process_data(self, data_queue):
         """处理接收到的数据"""
 
-        while True:
+        while self.keep_running:
             if not data_queue.empty():
                 line = data_queue.get()  # 从队列取出数据
                 try:
                     data = line.decode('utf-8', errors='ignore').strip()
-                    # data = line.decode('utf-8').strip()
                 except Exception as e:
                     data = str(data) 
                 self._filter_data(data)
