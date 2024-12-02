@@ -81,17 +81,17 @@ class AndroidUiAction:
         """ 向上滑动直至某个元素出现 """
         if element_type == "image":
             config = self.get_ui_icon_config()["ICON"]
-            self._android.sliding_search_element_image(config[element], direction="down")
+            self._android.sliding_search_element(config[element], direction="down", mode=element_type)
         elif element_type == "text":
-            self._android.sliding_search_element_text(text=element, direction="down")
+            self._android.sliding_search_element(element, direction="down", mode=element_type)
 
     def swipe_down_action(self, element, element_type):
         """ 向下滑动直至某个元素出现 """
         if element_type == "image":
             config = self.get_ui_icon_config()["ICON"]
-            self._android.sliding_search_element_image(config[element], direction="up")
+            self._android.sliding_search_element(config[element], direction="up", mode=element_type)
         elif element_type == "text":
-            self._android.sliding_search_element_text(text=element, direction="up")
+            self._android.sliding_search_element(element, direction="up", mode=element_type)
 
     def wait_action(self, seconds):
         """ 等待 """

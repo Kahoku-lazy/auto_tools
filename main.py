@@ -13,22 +13,17 @@ from multiprocessing import Process
 from runner.runner import Runner
 from utils.serial_modules import SerialModules
 
-from utils.log_modules import LogDriver
-
+# 串口
 def get_device_serial_logs(port, baudrate):
     """ 获取设备日志 """
     serial_modules = SerialModules()
     serial_modules.set_port_config(port, baudrate)
     serial_modules.main()
 
+# APP 用例执行
 def main(count: int):
     Runner().run(count)
 
-"""
-    ## Airtest 框架的截图功能，在截图时会出现异常，具体原因是：
-        # 1. bug info: ConnectionResetError: [WinError 10054] 远程主机强迫关闭了一个现有的连接。
-        # 2. minicap.py
-"""
 if __name__ == "__main__":
 
     test_case = Process(target=main, args=(100000,))

@@ -40,3 +40,31 @@
         略过
     3. 运行
         略过
+
+# 部分代码简介
+
+## 一. UI 操作部分：detection_system.py
+
+    1. UIDetectionSystem: UI页面检测
+        - find_image_coordinates: OpenCV 图像匹配算法配对图片，返回矩形对角点坐标
+        - find_text_coordinates: OCR 查找文字 返回矩形对角点坐标
+
+    2. AndroidDeviceUiTools: Android UI界面控制
+        - start_app： 启动APP
+        - close_app: 关闭APP
+        - wait_seconds： 等待
+        - click_image: 点击图片
+        - click_text：点击文字
+        - click_relative_location：以文字或图片为参考点，点击附近相对坐标
+        - sliding_search_element： 上下滑动，直到指定的文字或图片出现。
+        - input_text: 输入文本
+        - get_screenshot: 获取屏幕截图
+
+    3. IOSDeviceUiTools: iPhone UI界面控制
+        - 待更新
+
+## 二、用例执行部分：android_tools.py
+    1. AndroidUiAction: 安卓手机操作方法
+        - get_ui_icon_config： 获取用例与配置
+        - execute_action： 执行指定的操作，包括点击、滑动、查找等
+        - simulation_operation：读取用例步骤，并执行

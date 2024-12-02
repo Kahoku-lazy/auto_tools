@@ -7,10 +7,8 @@
     1. airtest 测试框架 更换为 图像识别算法
 
 """
-import os
 import cv2
 import difflib
-import psutil
 import logging
 from time import sleep
 
@@ -30,12 +28,14 @@ class UIDetectionSystem:
     def __init__(self, ocr_language='ru'):
         """
             args:
-                |- ocr_language: str
-                # language: 语言类型，默认为'ru' （俄语）
-                # 可选( 其它 可去查询 PaddleOCR 支持的语言):'ch'(中文)、'en'(英语)、'ru'(俄语)    
+                |--- ocr_language: str
+                    |--- # language: 语言类型，默认为'ru' （俄语）
+                    |--- # 可选( 其它 可去查询 PaddleOCR 支持的语言):'ch'(中文)、'en'(英语)、'ru'(俄语)    
         """
         self.ocr_language = ocr_language
         self._ocr = PaddleOCR(use_angle_cls=True, lang=self.ocr_language)  
+    
+    """``````````````````````````````````````````` 图像icon识别方法 ````````````````````````````````````````````````"""
 
     def find_image_coordinates(self, target, template):
         """ 通过模板匹配的方式寻找目标图像在原始图像中的位置 """
@@ -44,7 +44,9 @@ class UIDetectionSystem:
             return list(match_results)
         else:
             return False
-        
+    
+
+    """``````````````````````````````````````````` 图片文字识别方法 ````````````````````````````````````````````````"""
     @staticmethod
     def _compare_strings(str1, str2):
         """ 比较两个字符串相似度; 范围: -1 ~ 1"""
@@ -72,7 +74,7 @@ class AndroidDeviceUiTools:
         # UI 识别模块
         self._ui = UIDetectionSystem(ocr_language)
 
-    ####################################################### APP 启动与关闭 --------------------------------------------------------------
+    #------------------------------------------------------ APP 启动与关闭 --------------------------------------------------------------
     def start_app(self, package_name):
         self._u2.app_start(package_name)
 
@@ -82,7 +84,7 @@ class AndroidDeviceUiTools:
     def wait_seconds(self, seconds):
         sleep(seconds)
 
-    # ------------------------------------------------------------- 元素控件 --------------------------------------------------------------------------------
+    # ------------------------------------------------------ 元素控件 --------------------------------------------------------------------------------
     def _click_xpath(self, element_xpath, timeout=0.5):
         element_xpath = self._u2.xpath(element_xpath)
         if element_xpath.wait(timeout=timeout):
@@ -105,37 +107,35 @@ class AndroidDeviceUiTools:
         if points:
             self.click_points(self.rectangle_center(points))
         else:
-            return '>>>[Match Template:] No matching icon found'
+            return '>>>[Match Template] No matching icon found'
 
     def click_text(self, text):
         points = self._ui.find_text_coordinates(self.get_screenshot(), text)
         if points:
             self.click_points(self.rectangle_center(points))
         else:
-            print('>>>[Match Template:] No matching icon found')
+            print('>>>[OCR] No matching text found')
 
-    def click_text_relative_location(self, text, x_axial:int = 0, y_axial:int = 0):
+    def click_relative_location(self, element_value, x_axial:int = 0, y_axial:int = 0, mode: str = "text"):
         """ 以文本为原点，点击相对位置"""
-        points = self._ui.find_text_coordinates(self.get_screenshot(), text)
-        if points:
-            x, y = self.rectangle_center(points)
-            self.click_points((x + x_axial, y + y_axial))
-        else:
-            print('>>>[Match Template:] No matching icon found')
 
-    def click_image_relative_location(self, icon_path, x_axial:int = 0, y_axial:int = 0):
-        """ 以图片为原点，点击相对位置"""
-        template_image = cv2.imread(icon_path)
-        points = self._ui.find_image_coordinates(self.get_screenshot(), template_image)
+        if mode == "text":
+            points = self._ui.find_text_coordinates(self.get_screenshot(), element_value)
+        elif mode == "image":
+            template_image = cv2.imread(element_value)
+            points = self._ui.find_image_coordinates(self.get_screenshot(), template_image)
+        else:
+            return
+
         if points:
             x, y = self.rectangle_center(points)
             self.click_points((x + x_axial, y + y_axial))
         else:
-            print('>>>[Match Template:] No matching icon found')
+            print('>>>[OCR] No matching text found')
     
     """ --------------------------------------------------function: 滑动与拖动 --------------------------------------------------------------------------------"""
     def _swipe_y(self, flag: str = "up", height: float = 0.3):
-        """ 滑动屏幕，向上或向下滑动，高度由height决定 """
+        """ 滑动屏幕, 以手机屏幕中心点坐标为起点, 向上下滑动"""
         start_x, start_y = self._get_window_midpoint()
         end_x = start_x
         height = height * start_y
@@ -151,20 +151,16 @@ class AndroidDeviceUiTools:
         
         self._u2.swipe(start_x, start_y, end_x, end_y)
 
-    def sliding_search_element_text(self, text, pixel=0.3, direction: str = "up"):
+    def sliding_search_element(self, element_value, pixel=0.3, direction: str = "up", mode: str = "text"):
         """ 滑动搜索元素，向上或向下滑动，直到找到该元素出现 """
+        
         for i in range(20):
-            result = self._ui.find_text_coordinates(self.get_screenshot(), text)
-            if result:
-                break
-            self._swipe_y(direction, pixel)
-            self.wait_seconds(0.5)
+            if mode == "image":
+                image = cv2.imread(element_value)
+                result = self._ui.find_image_coordinates(self.get_screenshot(), image)
+            elif mode == "text":
+                result = self._ui.find_text_coordinates(self.get_screenshot(), element_value)
 
-    def sliding_search_element_image(self, icon_path, pixel=0.3, direction: str = "up"):
-        """ 滑动搜索元素，向上或向下滑动，直到找到该元素出现 """
-        image = cv2.imread(icon_path)
-        for i in range(20):
-            result = self._ui.find_image_coordinates(self.get_screenshot(), image)
             if result:
                 break
             self._swipe_y(direction, pixel)
@@ -209,19 +205,6 @@ class AndroidDeviceUiTools:
         """ 获取手机当前屏幕截图并将其转化为numpy数组 """
         image = self._u2.screenshot(format='opencv')
         return image
-    
-    def get_app_memory_usage_records(self, package_name):
-        """" 获取APP 内存使用情况与CPU占用率
-        return: 
-            cpu_usage: CPU占用率
-            mem_info: 内存使用情况
-        """
-        cpu_usage = psutil.cpu_percent(interval=1)
-        # 获取应用内存使用情况
-        response = self._u2.shell(f'dumpsys meminfo {package_name}')
-        mem_info = response.output  # 使用 output 属性获取输出
-        # total_pss = find_value(mem_info, r'TOTAL PSS:\s+(\d+)').group(1)
-        return cpu_usage, mem_info
 
     """ --------------------------------------------------  function:  坐标计算 --------------------------------------------------------------------------"""
     @staticmethod
@@ -236,12 +219,3 @@ class AndroidDeviceUiTools:
 if __name__ == "__main__":
     
     ui = AndroidDeviceUiTools()
-
-    text_dict = {
-                "green": "Элис, включи зеленый свет на занавесках.", 
-                "red":"Алиса, включи красный свет на занавесках.",
-                "H6079": "тест 6079"
-            }
-    
-    # ui.input_text_u2('//*[@resource-id="com.yandex.iot:id/dialog_text_input"]',text_dict["H6079"])
-    ui.input_text("тест 6079")
