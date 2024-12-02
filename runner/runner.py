@@ -20,6 +20,7 @@ class Runner:
         for i in test_case:
             self.action.test_logs.info(f">>> 使用 {i['location_method']} 实现 {i['action_type']} 元素 {i['action_value']}")
             self.action.simulation_operation(i["location_method"], i["action_type"], i["action_value"])
+            self.action.test_logs.info(f">>> [Done]: 操作完成")
             self.action.wait_action(1)
 
     def run(self, count: int):

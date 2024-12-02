@@ -23,7 +23,16 @@ class LogDriver:
 
         self.logger_init()  # 初始化 logger
 
+    def __getstate__(self):
+        # 返回一个不包含logger的字典
+        state = self.__dict__.copy()
+        del state['logger']
+        return state
 
+    def __setstate__(self, state):
+        # 重新创建logger并恢复其他状态
+        self.__dict__ = state
+        self.logger = logging.getLogger('MyLogger')
 
     def logger_init(self):
         """ 配置 logger """

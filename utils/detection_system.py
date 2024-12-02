@@ -105,7 +105,7 @@ class AndroidDeviceUiTools:
         if points:
             self.click_points(self.rectangle_center(points))
         else:
-            print('>>>[Match Template:] No matching icon found')
+            return '>>>[Match Template:] No matching icon found'
 
     def click_text(self, text):
         points = self._ui.find_text_coordinates(self.get_screenshot(), text)

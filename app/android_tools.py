@@ -63,7 +63,9 @@ class AndroidUiAction:
         element_type = element_type.lower()
         if element_type == "image": 
             config = self.get_ui_icon_config()["ICON"]
-            self._android.click_image(config[element])
+            result = self._android.click_image(config[element])
+            if result:
+                self.test_logs.info(result)
         elif element_type == "text":
             self._android.click_text(element)
         #  准备弃用 元素定位方式
