@@ -14,8 +14,9 @@ class LogDriver:
         self.logger = logging.Logger(logger_name)
         self.logger.setLevel(logging.INFO)
 
-        self.fmts = "%(asctime)s--%(levelname)s: %(message)s"   # log输出格式
+        self.fmts = "%(asctime)s.%(msecs)03d --%(levelname)s: %(message)s"   # log输出格式
         self.dmt = "%Y/%m/%d %H:%M:%S"      # log时间格式
+        
 
         self.log_path = file_path
 

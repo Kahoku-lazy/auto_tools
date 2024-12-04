@@ -64,14 +64,58 @@ class UIDetectionSystem:
                 conf_info = idx[1]      # 置信度信息
                 return points
         return False
-        
+    
+
+class Action:
+
+    def __init__(self, driver, ocr_language='ru') -> None:
+
+        self._ui = UIDetectionSystem(ocr_language)
+
+        self._driver = driver       # 驱动
+
+    @staticmethod
+    def rectangle_center(points: list):
+
+        """ 计算由两个对角点定义的矩形的中心点坐标 """
+        x1, y1, x2, y2 = [int(coordinate) for point in points for coordinate in point]
+        center_x = (x1 + x2) / 2
+        center_y = (y1 + y2) / 2
+        return (center_x, center_y)
+
+    def get_detection_result(self, value,  mode):
+        """ 获取检测结果 """
+        if mode == "text":
+            points = self._ui.find_text_coordinates(self.get_screenshot(), value)
+        elif mode == "image":
+            template_image = cv2.imread(value)
+            points = self._ui.find_image_coordinates(self.get_screenshot(), template_image)
+
+        try:
+            midpoint = self.rectangle_center(points)
+        except:
+            midpoint = None
+        finally:
+            return midpoint
+
+    def wait_seconds(self, seconds):
+        sleep(seconds)
+
+    def click_action(self, target, target_type):
+        midpoint = self.get_detection_result(target, target_type)
+        if midpoint:
+            self._driver.click_point(midpoint)
+
+    
+
+    
+
 
 class AndroidDeviceUiTools:
     def __init__(self, ocr_language='ru'):
 
         self._u2 = u2.connect()
 
-        # UI 识别模块
         self._ui = UIDetectionSystem(ocr_language)
 
     #------------------------------------------------------ APP 启动与关闭 --------------------------------------------------------------
@@ -134,7 +178,7 @@ class AndroidDeviceUiTools:
             print('>>>[OCR] No matching text found')
     
     """ --------------------------------------------------function: 滑动与拖动 --------------------------------------------------------------------------------"""
-    def _swipe_y(self, flag: str = "up", height: float = 0.3):
+    def _swipe_y(self, flag: str = "up", height: float = 0.4):
         """ 滑动屏幕, 以手机屏幕中心点坐标为起点, 向上下滑动"""
         start_x, start_y = self._get_window_midpoint()
         end_x = start_x
@@ -154,7 +198,7 @@ class AndroidDeviceUiTools:
     def sliding_search_element(self, element_value, pixel=0.3, direction: str = "up", mode: str = "text"):
         """ 滑动搜索元素，向上或向下滑动，直到找到该元素出现 """
         
-        for i in range(20):
+        for i in range(7):
             if mode == "image":
                 image = cv2.imread(element_value)
                 result = self._ui.find_image_coordinates(self.get_screenshot(), image)
