@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
     test_case = Process(target=main, args=(100000,))
 
-    port, baud_rate = "COM11", 921600
+    port, baud_rate = "COM13", 921600
     ser = Process(target=get_device_serial_logs, args=(port, baud_rate,))
 
     # -------------------------------------- 启动进程  --------------------------------------
