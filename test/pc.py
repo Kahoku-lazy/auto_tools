@@ -9,7 +9,7 @@ import win32con
 import os, cv2
 import numpy as np
 
-from utils.template_matching import match_template
+from utils.ui_detection_system import match_template
 
 def rectangle_center(points: list):
     """ 计算由两个对角点定义的矩形的中心点坐标 """
@@ -157,3 +157,13 @@ if __name__ == "__main__":
     # 关闭应用程序
     # close_application(window_name)
 
+from pywinauto import Application
+
+# 启动记事本
+app = Application().start('notepad.exe')
+
+# 启动微信
+app1 = Application().start(r'C:\Program Files (x86)\Tencent\WeChat\WeChat.exe')
+
+# 启动迅雷
+app2 = Application().start(r'C:\Program Files (x86)\Thunder Network\Thunder\Program\ThunderStart.exe')

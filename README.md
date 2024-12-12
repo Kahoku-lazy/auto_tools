@@ -35,8 +35,8 @@
     1. wd14-tagger-standalone
     2. OmniParser
 
-## 用例模版
-    ``` csv
+## 用例模版: csv文件
+    ```csv
     location_method,action_type,action_value
     文本,点击,1
     元素,等待,2
@@ -44,8 +44,8 @@
     元素,等待,3
     ```
 
-## 配置目标
-    ``` yaml
+## 配置文件模板：yaml文件
+    ```yaml
     TEXT:   
         - "以下为text元素信息"
 

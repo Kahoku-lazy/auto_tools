@@ -8,41 +8,37 @@
     2. 获取设备日志
     3. 通过设备日志断言操作结果
 """
+from runner.runner import Runner
+from utils.utils import SerialModules, read_config
+
 from multiprocessing import Process
 
-from runner.runner import Runner
-from utils.serial_modules import SerialModules
+CONFIG_PATH = "config.ini"
+CONFIG = read_config(CONFIG_PATH)
 
 # 串口
-def get_device_serial_logs(port, baudrate):
-    """ 获取设备日志 """
-    serial_modules = SerialModules()
-    serial_modules.set_port_config(port, baudrate)
+def get_device_serial_logs():
+    serial_modules = SerialModules(CONFIG)
     serial_modules.main()
 
 # APP 用例执行
-def main(count: int):
-    Runner().run(count)
+def main():
+    Runner(CONFIG).run()
 
 if __name__ == "__main__":
 
-    test_case = Process(target=main, args=(100000,))
+    # 进程关闭的同时 关闭进程中的线程
 
-    port, baud_rate = "COM13", 921600
-    ser = Process(target=get_device_serial_logs, args=(port, baud_rate,))
+    test_case = Process(target=main)
+    ser = Process(target=get_device_serial_logs)
 
     # -------------------------------------- 启动进程  --------------------------------------
-    ser.start()
+    # ser.start()
     test_case.start()
     
     try:
         test_case.join()
-        ser.join()
+        # ser.join()
     except KeyboardInterrupt:
         print("进程被手动终止")
-    except Exception as e:
-        print(f"进程终止时发生异常: {e}")
-    finally:
-        # 此处可以添加清理代码，例如关闭设备连接等
-        print("进行清理操作...")
 

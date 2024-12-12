@@ -9,8 +9,15 @@
     2. TemplateMatcher(针对同一尺寸分辨率手机), MultiScale(针对不同尺寸分辨率手机) 使用的 cv2.TM_CCOEFF_NORMED 选择二者中最大值的结果
         |- cv2.TM_CCOEFF_NORMED: 标准化相关系数匹配，值越大表示匹配越好。
     3. 修改了返回值的类型： 返回值为： 左上角坐标，右下角坐标，匹配置信度(当前算法越大越好, 范围[0 ~ 1])
+    
 """
+from paddleocr import PaddleOCR    
+import logging
+# 关闭 PPocr Debug 日志
+logging.getLogger("ppocr").setLevel(logging.ERROR)
 
+
+import difflib
 import cv2
 import numpy as np
 
@@ -127,7 +134,6 @@ class SIFTFeatureMatcher:
         cv2.imwrite('ret.png', image)
         return x1, y1, x2, y2
 
-
 def match_template(image, template):
     template_matcher = TemplateMatcher().match(image, template)
     multi_scale = MultiScale().match(image, template)
@@ -138,19 +144,43 @@ def match_template(image, template):
         return multi_scale[:2]
     else:
         return None
-
-if __name__ == '__main__':
-
-    # 加载图像和模板
-    # detail_page_off_1.png
-    template_path = r"D:\Kahoku\auto_tools\config\yandex\yandex_icon\detail_page_on.png"
-
-    image_path = r"D:\Kahoku\auto_tools\screenshot.png"
-
-    image = cv2.imread(image_path)
-    template = cv2.imread(template_path)
-
-    print(type(image))
     
-    # result = match_template(image, template)
-    # print(result)
+
+
+class UIDetectionSystem:
+    def __init__(self, ocr_language='ch'):
+        """
+            args:
+                |--- ocr_language: str
+                    |--- # language: 语言类型，默认为'ru' （俄语）
+                    |--- # 可选( 其它 可去查询 PaddleOCR 支持的语言):'ch'(中文)、'en'(英语)、'ru'(俄语)    
+        """
+        self.ocr_language = ocr_language
+        self._ocr = PaddleOCR(use_angle_cls=True, lang=self.ocr_language)  
+    
+
+    def find_image_coordinates(self, target, template):
+        """ 通过模板匹配的方式寻找目标图像在原始图像中的位置 """
+        match_results = match_template(target, template)
+        if match_results:
+            return list(match_results)
+        else:
+            return False
+    
+    @staticmethod
+    def _compare_strings(str1, str2):
+        """ 比较两个字符串相似度; 范围: -1 ~ 1"""
+        seq_matcher = difflib.SequenceMatcher(None, str1, str2)
+        return seq_matcher.ratio()
+
+    def find_text_coordinates(self, image, text, threshold=0.8):
+        """ 通过OCR识别图像中的文本,返回坐标信息
+        """
+        result = self._ocr.ocr(image, cls=True)
+        for idx in result[0]:
+            similarity = self._compare_strings(idx[1][0], text)
+            if similarity >= threshold:
+                points = [idx[0][0], idx[0][2]]  # 左上角和右下角坐标
+                conf_info = idx[1]      # 置信度信息
+                return points
+        return False
