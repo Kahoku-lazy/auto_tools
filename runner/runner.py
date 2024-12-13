@@ -4,7 +4,7 @@
 @ description:  运行器
 @update: 2024/11
 """
-from app.android_tools import AndroidUiAction
+from app.ui_action import AndroidUiAction
 from utils.utils import read_csv_as_dict
 
 class Runner:

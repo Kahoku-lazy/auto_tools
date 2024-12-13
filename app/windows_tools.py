@@ -10,7 +10,7 @@ import pyautogui
 import numpy as np
 import cv2
 
-from app.detection_system import Action
+from app.android_tools import Action
 from utils.utils import read_yaml_as_dict, LogDriver
 
 class WindowsUiAction:
