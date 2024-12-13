@@ -27,6 +27,13 @@ def read_config(file_path):
     config.read(file_path)
     return config
 
+def get_section_name_values(config_path, section_name):
+    """ 获取配置文件中section下的所有键值对 """
+    config = read_config(config_path)
+    action = config.items(section_name)
+    converted_list = [item for tuple_item in action for item in tuple_item]
+    return converted_list    
+
 def write_csv_values(file_path, values, mode="a+"):
     with open(file_path, mode, newline='') as csvfile:
         csv_writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
@@ -39,16 +46,11 @@ def get_file_all(file_path, suffix):
         files.extend(glob.glob(os.path.join(file_path, f'**/**{ext}'),  recursive=True))
     return files
 
-def is_value_exist(text, pattern):
-    """ 判断是否存在某个特定的值 """
-    match = re.findall(pattern, text)
-    if match:
-        return True
-    return None
 
 def find_value(text, pattern):
     """ 查找符合模式的第一个匹配项 """
     match = re.search(pattern, text)
+    # match = re.findall(pattern, text)
     if match:
         return match
     else:
@@ -77,7 +79,6 @@ class LogDriver:
         self.fmts = "%(asctime)s.%(msecs)03d--[%(name)s] -> %(levelname)s |>>> %(message)s"   # log输出格式
         self.dmt = "%Y/%m/%d %H:%M:%S"      # log时间格式
         
-
         self.log_path = file_path
 
         self.console_printing = console_printing    # 是否输出到控制台

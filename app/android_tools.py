@@ -24,7 +24,7 @@ class AndroidUiAction:
 
     @staticmethod
     def wait_seconds(seconds):
-        sleep(seconds)
+        sleep(int(seconds))
 
     @staticmethod
     def rectangle_center(points: list):
@@ -53,7 +53,6 @@ class AndroidUiAction:
             midpoint = None
         finally:
             return midpoint
-
 
     """ --------------------------------------------------function:  元素方法 （不同系统【PC/IOS/Android】可能需要重构）------------------------------------------------------------"""
     def get_screenshot(self, save_img=False):
@@ -110,7 +109,6 @@ class AndroidUiAction:
         else:
             x , y = self._get_window_midpoint()
 
-        
         if direction == "up":
             self.swipe_point(x, y, x, y - pixel)
         elif direction == "down":

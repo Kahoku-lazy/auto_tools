@@ -10,7 +10,7 @@ import pyautogui
 import numpy as np
 import cv2
 
-from app.android_tools import Action
+from app.android_tools import AndroidUiAction
 from utils.utils import read_yaml_as_dict, LogDriver
 
 class WindowsUiAction:
@@ -23,7 +23,7 @@ class WindowsUiAction:
         self._drive = device
         self._ocr_language = self._config.get("case", "ocr_language")
 
-        self._action = Action(self._drive, ocr_language=self._ocr_language)
+        self._action = AndroidUiAction(self._drive, ocr_language=self._ocr_language)
         
 
         self.action_list = self.get_section_name_values("action")    # 支持的动作列表: 点击/滑动/查找/等待

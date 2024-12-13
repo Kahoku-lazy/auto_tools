@@ -11,7 +11,7 @@ from pathlib import Path
 import uiautomator2 as u2
 
 from app.android_tools import AndroidUiAction
-from utils.utils import read_yaml_as_dict, LogDriver
+from utils.utils import LogDriver, read_yaml_as_dict, read_config, get_section_name_values
 
 from app.windows_tools import WindowsDeviceUiTools
 
@@ -21,20 +21,20 @@ class UiAction:
 
         self._config = config
 
-        # device = u2.connect()   # Android UI 操作方法
-        device = WindowsDeviceUiTools()  # windows UI 操作方法
+        device = u2.connect()   # Android UI 操作方法
+        # device = WindowsDeviceUiTools()  # windows UI 操作方法
+
         self._drive = device
         self._ocr_language = self._config.get("case", "ocr_language")
-
         self._action = AndroidUiAction(self._drive, ocr_language=self._ocr_language)
         
-
-        self.action_list = self.get_section_name_values("action")    # 支持的动作列表: 点击/滑动/查找/等待
-        self.location_method_list = self.get_section_name_values("location_method") # 支持的定位方式列表: 元素/文本/图片
+        # 支持的动作列表
+        self.action_list = get_section_name_values(self._config.get("UiConfig", "check_config"), "action")    
+        # 支持的识别方法
+        self.location_method_list = get_section_name_values(self._config.get("UiConfig", "check_config"), "location_method") 
 
         self.test_logs = LogDriver(self._config.get("Logs", "test_case_run"), "uiAction")    
 
-    """ |------------------------------------ 功能： 配置信息处理 ----------------------------------| """
     def get_ui_config(self):
         config_path = Path(self._config.get("UiConfig", "path"))
 
@@ -54,29 +54,53 @@ class UiAction:
             return element
         elif type == "xpath":
             self.get_ui_config()["ELEMENTS"]
-            return config[element]
+            return config[element]     
     
-    def get_section_name_values(self, section_name):
-        """ 获取配置文件中section下的所有键值对 """
-        action = self._config.items(section_name)
-        converted_list = [item for tuple_item in action for item in tuple_item]
-        return converted_list            
-
-    """ |----------------------------------------------------- 功能：异常处理 ---------------------------------------------------| """
-
-    def _check_action_input(self, action_type):
+    def check_case_input(self, action_type, location_method):
         """ 检查用户输入的操作类型是否合法 """
         if action_type not in self.action_list:
-            raise ValueError(f"不支持 {action_type} 操作")
-        
-    def _check_location_method_input(self, location_method):
-        """ 检查用户输入的定位方式是否合法 """
+            raise ValueError(f"不支持 {action_type} 操作方法")
         if location_method not in self.location_method_list:
-            raise ValueError(f"不支持 {location_method} 定位方法")
-
-
-    """ |------------------------------------ 页面功能实现: UI动作 (模拟人为操作) ----------------------------------| """
+            raise ValueError(f"不支持 {location_method} 识别方法")
     
+    def click_action(self,  element=None, element_type=None):
+        """ 目标元素点击 """
+        midpoint = self.get_detection_result(element, element_type)
+        if midpoint:
+            self.click_point(midpoint)
+        else:
+            return False
+        
+    def click_relative_location_action(self,  element=None, element_type=None, x_axial:int = 0, y_axial:int = 0):
+        """ 以元素为参考点位，点击相对位置"""
+        midpoint = self.get_detection_result(element, element_type)
+        if midpoint:
+            x, y = midpoint
+            self.click_points((x + x_axial, y + y_axial))
+
+    def swipe_action(self, element=None, element_type=None, direction: str = "up", pixel: float = 100.0):
+        """ 滑动元素 """
+        if element and element_type:
+            midpoint = self.get_detection_result(element, element_type)
+            if midpoint:
+                x, y = midpoint
+        else:
+            x , y = self._get_window_midpoint()
+
+        if direction == "up":
+            self.swipe_point(x, y, x, y - pixel)
+        elif direction == "down":
+            self.swipe_point(x, y, x, y + pixel)
+
+    def sliding_search_element_action(self, element, element_type, pixel=0.3, direction: str = "up"):
+        """ 滑动搜索元素，向上或向下滑动，直到找到该元素出现 """
+        
+        for i in range(7):
+            if self.get_detection_result(element, element_type):
+                break
+            self.swipe_action(direction, pixel)
+            self.wait_seconds(0.5)
+
     def execute_action(self, action_type, action_value, element_type: str):
         """ 执行指定的操作，包括点击、滑动、查找等 
         args:
@@ -89,66 +113,41 @@ class UiAction:
         """
 
         # 适配操作的值; 例如 文本是字符串， 图片是图片路径，控件是定位元素
-        element_type = element_type.lower()
-        element = self.get_element_config(action_value, element_type)
-        args = {"element": element, "element_type": element_type}
+        # element_type = element_type.lower()
+        # 操作元素
+        element = self.get_element_config(action_value, element_type)   
+        # 操作方法    
+        args = {"element": element, "element_type": element_type}           
+        add_to_dict = lambda d, k, v: {**d, k: v}
 
-        if action_type  == "click" or action_type == "点击":
-            method_name = "click_action"
-            args = {"element": element, "element_type": element_type}
-        
-        elif action_type == "向上滑动":
-            method_name = "swipe_action"
-            args["direction"] =  "up"
+        action_method = {
+            "点击": ["click_action", args],
+            "向上滑动": ["swipe_action", add_to_dict(args, "direction", "up")],
+            "向下滑动": ["swipe_action", add_to_dict(args, "direction", "down")],
+            "等待": ["wait_seconds", {"seconds": element}],
+            "输入文本": ["input_text", {"text": element}],
+        }
 
-        elif action_type == "向下滑动":
-            method_name = "swipe_action"
-            args["direction"] =  "down"
+        method = getattr(self._action, action_method[action_type][0], lambda x, y: "None")
+        result = method(**action_method[action_type][1])
 
-        elif action_type  == "wait"  or action_type == "等待":
-            method_name = "wait_seconds"
-            del args["element"]
-            del args["element_type"]
-            args["seconds"] = int(element)
+        return result
 
-        elif action_type == "输入文本":
-            method_name = "input_text"
-            del args["element"]
-            del args["element_type"]
-            args["text"] = element
-        
-        else:
-            method_name = "None"
-
-        method = getattr(self._action, method_name, lambda x, y: "None")
-        result = method(**args)
-
-
-
-    """ |------------------------------------------------- 函数: 业务功能 实现 -------------------------------------------------------| """
-    def simulation_operation(self, location_method, action_type, action_value):
-
+    def simulation_operation(self, location_method_name, action_type, action_value):
+        """ 执行测试用例  """
         # 检测用例输入数据是否合法
-        self._check_location_method_input(location_method)
-        self._check_action_input(action_type)
+        self.check_case_input(action_type, location_method_name)
 
+        location_method = {"图片": "image", "文本": "text", "元素": "xpath"}
+        
+        self.execute_action(action_type, action_value, location_method[location_method_name])
+        self._action.wait_seconds(1)
+
+        # |******  待优化 *******|
         if location_method == "启动":
             self._android.start_app(action_value)
         elif location_method == "关闭":
             self._android.close_app(action_value)
-
-        # 检测方式
-        if location_method == "图片":
-            element_type="image"
-        elif location_method == "文本":
-            element_type="text"
-        elif location_method == "元素":
-            element_type="xpath"
-        else:
-            return
-        
-        self.execute_action(action_type, action_value, element_type=element_type)
-        self._action.wait_seconds(1)
 
 
 
