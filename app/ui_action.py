@@ -63,44 +63,6 @@ class UiAction:
         if location_method not in self.location_method_list:
             raise ValueError(f"不支持 {location_method} 识别方法")
     
-    def click_action(self,  element=None, element_type=None):
-        """ 目标元素点击 """
-        midpoint = self.get_detection_result(element, element_type)
-        if midpoint:
-            self.click_point(midpoint)
-        else:
-            return False
-        
-    def click_relative_location_action(self,  element=None, element_type=None, x_axial:int = 0, y_axial:int = 0):
-        """ 以元素为参考点位，点击相对位置"""
-        midpoint = self.get_detection_result(element, element_type)
-        if midpoint:
-            x, y = midpoint
-            self.click_points((x + x_axial, y + y_axial))
-
-    def swipe_action(self, element=None, element_type=None, direction: str = "up", pixel: float = 100.0):
-        """ 滑动元素 """
-        if element and element_type:
-            midpoint = self.get_detection_result(element, element_type)
-            if midpoint:
-                x, y = midpoint
-        else:
-            x , y = self._get_window_midpoint()
-
-        if direction == "up":
-            self.swipe_point(x, y, x, y - pixel)
-        elif direction == "down":
-            self.swipe_point(x, y, x, y + pixel)
-
-    def sliding_search_element_action(self, element, element_type, pixel=0.3, direction: str = "up"):
-        """ 滑动搜索元素，向上或向下滑动，直到找到该元素出现 """
-        
-        for i in range(7):
-            if self.get_detection_result(element, element_type):
-                break
-            self.swipe_action(direction, pixel)
-            self.wait_seconds(0.5)
-
     def execute_action(self, action_type, action_value, element_type: str):
         """ 执行指定的操作，包括点击、滑动、查找等 
         args:
