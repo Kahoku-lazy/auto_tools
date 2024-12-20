@@ -15,17 +15,19 @@ from runner.runner import run_case, get_device_serial_logs
 
 if __name__ == "__main__":
 
-    test_case = Process(target=run_case)
-    ser = Process(target=get_device_serial_logs)
+    run_case()
 
-    # -------------------------------------- 启动进程  --------------------------------------
-    # ser.start()
-    test_case.start()
+    # test_case = Process(target=run_case)
+    # ser = Process(target=get_device_serial_logs)
+
+    # # -------------------------------------- 启动进程  --------------------------------------
+    # # ser.start()
+    # test_case.start()
     
-    try:
-        test_case.join()
-        # ser.join()
-    except KeyboardInterrupt:
-        print("|>>> 测试结束 |")
-        print(">>> 退出中...")
+    # try:
+    #     test_case.join()
+    #     # ser.join()
+    # except KeyboardInterrupt:
+    #     print("|>>> 测试结束 |")
+    #     print(">>> 退出中...")
 
